@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Celles — Planning 2026</title>
+<style>
+  /* ── PASSWORD SCREEN ── */
+  #lock-screen {
+    position: fixed; inset: 0; z-index: 9999;
+    display: flex; align-items: center; justify-content: center;
+    background: #f5f5f7;
+    font-family: -apple-system, 'Helvetica Neue', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #lock-screen::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 70% 50% at 15% 10%, rgba(0,122,255,0.07) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 40% at 85% 90%, rgba(48,176,80,0.05) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .lock-card {
+    background: rgba(255,255,255,0.82);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 20px;
+    padding: 44px 40px 36px;
+    width: 100%; max-width: 360px;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.14), 0 4px 16px rgba(0,0,0,0.08);
+    text-align: center;
+    position: relative; z-index: 1;
+    animation: lockIn 0.4s cubic-bezier(0.34,1.4,0.64,1) both;
+  }
+
+  @keyframes lockIn {
+    from { opacity: 0; transform: scale(0.9) translateY(16px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  .lock-icon {
+    width: 56px; height: 56px;
+    background: rgba(0,113,227,0.1);
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px;
+  }
+
+  .lock-icon svg { color: #0071e3; }
+
+  .lock-title {
+    font-size: 22px; font-weight: 700;
+    letter-spacing: -0.4px; color: #1d1d1f;
+    margin-bottom: 4px;
+  }
+
+  .lock-sub {
+    font-size: 13px; color: #6e6e73;
+    margin-bottom: 28px;
+  }
+
+  .lock-input-wrap { position: relative; margin-bottom: 14px; }
+
+  #lock-input {
+    width: 100%;
+    padding: 13px 44px 13px 14px;
+    border: 1.5px solid rgba(0,0,0,0.14);
+    border-radius: 11px;
+    font-family: inherit; font-size: 16px;
+    background: rgba(255,255,255,0.7);
+    color: #1d1d1f;
+    outline: none;
+    letter-spacing: 0.08em;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    -webkit-appearance: none;
+    text-align: center;
+  }
+
+  #lock-input:focus {
+    border-color: #0071e3;
+    box-shadow: 0 0 0 3.5px rgba(0,113,227,0.18);
+  }
+
+  #lock-input.error {
+    border-color: #ff3b30;
+    box-shadow: 0 0 0 3.5px rgba(255,59,48,0.15);
+    animation: shake 0.35s ease;
+  }
+
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20%      { transform: translateX(-6px); }
+    40%      { transform: translateX(6px); }
+    60%      { transform: translateX(-4px); }
+    80%      { transform: translateX(4px); }
+  }
+
+  .toggle-pw {
+    position: absolute; right: 12px; top: 50%;
+    transform: translateY(-50%);
+    background: none; border: none; cursor: pointer;
+    color: #aeaeb2; padding: 4px;
+    transition: color 0.12s;
+  }
+  .toggle-pw:hover { color: #6e6e73; }
+
+  #lock-error {
+    font-size: 12.5px; color: #ff3b30;
+    min-height: 18px; margin-bottom: 10px;
+    font-weight: 500;
+    opacity: 0; transition: opacity 0.2s;
+  }
+  #lock-error.visible { opacity: 1; }
+
+  #lock-btn {
+    width: 100%;
+    padding: 13px;
+    background: #0071e3; color: white;
+    border: none; border-radius: 11px;
+    font-family: inherit; font-size: 15px; font-weight: 600;
+    cursor: pointer;
+    transition: all 0.14s;
+    box-shadow: 0 2px 12px rgba(0,113,227,0.38);
+    letter-spacing: -0.1px;
+  }
+  #lock-btn:hover { background: #0077ed; transform: scale(1.01); }
+  #lock-btn:active { transform: scale(0.98); }
+
+  .lock-footer {
+    margin-top: 20px;
+    font-size: 11.5px; color: #aeaeb2;
+  }
+
+  /* Hide main app until unlocked */
+  #app { display: none; }
+</style>
+  :root {
+    --bg: #f5f5f7;
+    --surface: rgba(255,255,255,0.80);
+    --surface-solid: #ffffff;
+    --border: rgba(0,0,0,0.08);
+    --border-strong: rgba(0,0,0,0.14);
+    --ink: #1d1d1f;
+    --ink-secondary: #6e6e73;
+    --ink-tertiary: #aeaeb2;
+    --accent: #0071e3;
+    --accent-hover: #0077ed;
+    --red: #ff3b30;
+    --orange: #ff9500;
+
+    --fons: #ff6b35;
+    --fons-bg: rgba(255,107,53,0.1);
+    --fons-row: rgba(255,107,53,0.04);
+    --paul: #007aff;
+    --paul-bg: rgba(0,122,255,0.1);
+    --paul-row: rgba(0,122,255,0.04);
+    --wouter: #30b050;
+    --wouter-bg: rgba(48,176,80,0.1);
+    --wouter-row: rgba(48,176,80,0.04);
+
+    --weekend-bg: rgba(255,149,0,0.06);
+    --weekend-day: rgba(255,149,0,0.12);
+    --holiday-bg: rgba(175,82,222,0.07);
+    --holiday-day: rgba(175,82,222,0.14);
+
+    --zeker-bg: rgba(52,199,89,0.12);
+    --zeker-fg: #1d7a35;
+    --misschien-bg: rgba(255,149,0,0.12);
+    --misschien-fg: #b05000;
+    --geen-bg: rgba(142,142,147,0.12);
+    --geen-fg: #6e6e73;
+
+    --radius: 14px;
+    --radius-sm: 9px;
+    --blur: blur(20px) saturate(180%);
+    --shadow: 0 2px 16px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.05);
+    --shadow-md: 0 8px 28px rgba(0,0,0,0.12);
+    --shadow-lg: 0 22px 64px rgba(0,0,0,0.2);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, 'Helvetica Neue', sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(ellipse 70% 50% at 10% 0%, rgba(0,122,255,0.06) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 40% at 90% 100%, rgba(48,176,80,0.05) 0%, transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+
+  .page { position: relative; z-index: 1; max-width: 1160px; margin: 0 auto; padding: 0 24px 80px; }
+
+  /* ── HEADER ── */
+  header {
+    padding: 48px 0 28px;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    gap: 16px; flex-wrap: wrap;
+  }
+
+  .header-title h1 {
+    font-size: 38px; font-weight: 700; letter-spacing: -1px; line-height: 1;
+  }
+  .header-title h1 .light { font-weight: 200; color: var(--ink-secondary); }
+  .header-sub { font-size: 13px; color: var(--ink-tertiary); margin-top: 6px; }
+
+  /* ── STATS ── */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+    gap: 10px; margin-bottom: 20px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+    border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 15px 17px;
+    box-shadow: var(--shadow);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .stat-card:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+  .stat-val { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; line-height: 1; margin-bottom: 4px; }
+  .stat-lbl { font-size: 11px; color: var(--ink-secondary); font-weight: 500; }
+
+  /* ── LEGEND ── */
+  .legend-bar {
+    display: flex; gap: 28px; flex-wrap: wrap;
+    padding: 12px 18px;
+    background: var(--surface);
+    backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm); box-shadow: var(--shadow);
+    margin-bottom: 16px; align-items: center;
+  }
+  .legend-grp { display: flex; flex-direction: column; gap: 5px; }
+  .legend-grp-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-tertiary); }
+  .legend-items { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--ink-secondary); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .legend-swatch { width: 18px; height: 12px; border-radius: 3px; }
+
+  /* ── TOOLBAR ── */
+  .toolbar { display: flex; gap: 7px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+
+  .chip {
+    display: flex; align-items: center; gap: 5px;
+    padding: 6px 14px; border-radius: 20px;
+    border: 1px solid var(--border); background: white;
+    font-family: inherit; font-size: 12px; font-weight: 500;
+    cursor: pointer; color: var(--ink-secondary);
+    transition: all 0.14s; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  .chip-dot { width: 7px; height: 7px; border-radius: 50%; }
+  .chip:hover { border-color: var(--border-strong); }
+  .chip.active { background: var(--ink); color: white; border-color: var(--ink); box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+  .toolbar-spacer { flex: 1; }
+
+  .add-btn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 18px; background: var(--accent); color: white;
+    border: none; border-radius: 20px;
+    font-family: inherit; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: all 0.14s;
+    box-shadow: 0 2px 10px rgba(0,113,227,0.38);
+  }
+  .add-btn:hover { background: var(--accent-hover); transform: scale(1.02); }
+  .add-btn:active { transform: scale(0.97); }
+
+  /* ── TABLE ── */
+  .tbl-wrap {
+    background: var(--surface);
+    backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+    border: 1px solid var(--border);
+    border-radius: var(--radius); box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  /* Column layout: Wk | Ma Di Wo Do Vr Za Zo | Wie | Status | Actions */
+  .tbl-head {
+    display: grid;
+    grid-template-columns: 48px 1fr 1fr 1fr 1fr 1fr 60px 60px 185px 110px 64px;
+    background: rgba(0,0,0,0.025);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .th {
+    padding: 9px 6px;
+    font-size: 10.5px; font-weight: 600;
+    color: var(--ink-tertiary);
+    text-transform: uppercase; letter-spacing: 0.07em;
+    text-align: center;
+  }
+  .th:first-child { text-align: left; padding-left: 14px; }
+  .th-za, .th-zo { color: var(--orange); }
+  .th-wie { text-align: left; padding-left: 12px; }
+
+  /* ── ROWS ── */
+  .week-row {
+    display: grid;
+    grid-template-columns: 48px 1fr 1fr 1fr 1fr 1fr 60px 60px 185px 110px 64px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+    animation: fadeUp 0.25s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(3px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  .week-row:last-child { border-bottom: none; }
+  .week-row.hidden { display: none; }
+  .week-row.cur-wk { outline: 2px solid rgba(0,113,227,0.25); outline-offset: -1px; }
+
+  /* Row tinting by family */
+  .row-fons { background: var(--fons-row); }
+  .row-paul { background: var(--paul-row); }
+  .row-wouter { background: var(--wouter-row); }
+
+  /* Weekend & holiday row accent (applied to za/zo cells) */
+  .cell-za, .cell-zo { background: rgba(255,149,0,0.07) !important; }
+  .week-row.has-holiday .cell-za,
+  .week-row.has-holiday .cell-zo { background: rgba(175,82,222,0.08) !important; }
+
+  .week-row:hover { filter: brightness(0.975); }
+
+  /* ── CELLS ── */
+  .cell {
+    padding: 9px 6px;
+    display: flex; flex-direction: column; justify-content: center;
+    min-height: 52px;
+  }
+
+  /* week num */
+  .wk-num-wrap { padding-left: 14px; }
+  .wk-num { font-size: 12px; font-weight: 600; color: var(--ink-tertiary); }
+  .wk-num.cur { color: var(--accent); font-weight: 700; }
+  .bijz-tag {
+    font-size: 9px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.04em;
+    color: #af52de; margin-top: 2px; line-height: 1.2;
+  }
+  .bijz-tag.vakantie { color: var(--orange); }
+
+  /* day cells */
+  .day-cell { align-items: center; text-align: center; }
+  .day-n { font-size: 13px; font-weight: 400; color: var(--ink); line-height: 1; }
+  .day-n.weekend { color: var(--orange); font-weight: 500; }
+  .day-n.holiday { color: #af52de; font-weight: 600; }
+  .mon-l { font-size: 9px; color: var(--ink-tertiary); text-transform: uppercase; letter-spacing: 0.04em; margin-top: 2px; }
+
+  /* today circle */
+  .today-ring {
+    width: 27px; height: 27px;
+    background: var(--accent); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto;
+  }
+  .today-ring .day-n { color: white; font-weight: 600; font-size: 12px; }
+
+  /* wie */
+  .wie-cell { padding: 7px 12px; cursor: pointer; }
+  .wie-cell:hover .wie-pill { opacity: 0.82; }
+
+  .wie-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 10px; border-radius: 20px;
+    font-size: 12px; font-weight: 600;
+    transition: opacity 0.12s; white-space: nowrap;
+  }
+  .wie-dot-sm { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: 0.65; }
+  .wie-fons { background: var(--fons-bg); color: var(--fons); }
+  .wie-paul { background: var(--paul-bg); color: var(--paul); }
+  .wie-wouter { background: var(--wouter-bg); color: var(--wouter); }
+  .wie-empty { color: var(--ink-tertiary); font-size: 12px; font-style: italic; padding: 4px 0; }
+  .opmerking { font-size: 11px; color: var(--ink-tertiary); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* status */
+  .status-cell { padding: 7px 8px; }
+  .s-empty { color: var(--ink-tertiary); font-style: italic; font-size: 12px; }
+
+  .spill { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:20px; font-size:11px; font-weight:600; }
+  .s-dot { width:5px; height:5px; border-radius:50%; background:currentColor; }
+  .s-zeker { background:var(--zeker-bg); color:var(--zeker-fg); }
+  .s-misschien { background:var(--misschien-bg); color:var(--misschien-fg); }
+  .s-geen { background:var(--geen-bg); color:var(--geen-fg); }
+
+  /* actions */
+  .actions-cell { flex-direction: row; align-items: center; justify-content: flex-end; gap: 3px; padding: 7px 10px; }
+  .icon-btn { width:28px; height:28px; display:flex; align-items:center; justify-content:center; background:transparent; border:none; border-radius:6px; cursor:pointer; color:var(--ink-tertiary); transition:all 0.12s; }
+  .icon-btn:hover { background:rgba(0,0,0,0.06); color:var(--ink); }
+  .icon-btn.del:hover { background:rgba(255,59,48,0.1); color:var(--red); }
+
+  /* ── MONTH DIVIDER ── */
+  .month-div {
+    display: grid;
+    grid-template-columns: 48px 1fr;
+    background: rgba(0,0,0,0.018);
+    border-bottom: 1px solid var(--border);
+    padding: 6px 0 6px 14px;
+    align-items: center;
+  }
+  .month-div-name { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-tertiary); grid-column: 2; }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 200;
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.18s;
+    backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: rgba(255,255,255,0.96);
+    backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+    border: 1px solid rgba(255,255,255,0.6);
+    border-radius: 18px; width: 100%; max-width: 390px;
+    transform: scale(0.93) translateY(12px);
+    transition: transform 0.22s cubic-bezier(0.34,1.5,0.64,1);
+    box-shadow: var(--shadow-lg); overflow: hidden;
+  }
+  .modal-overlay.open .modal { transform: scale(1) translateY(0); }
+  .modal-hdr { padding: 20px 20px 0; display: flex; justify-content: space-between; align-items: center; }
+  .modal-hdr h2 { font-size: 17px; font-weight: 700; letter-spacing: -0.2px; }
+  .modal-x { width:28px; height:28px; background:rgba(118,118,128,0.12); border:none; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--ink-secondary); font-size:14px; transition:background 0.12s; }
+  .modal-x:hover { background:rgba(118,118,128,0.22); }
+  .modal-body { padding: 16px 20px 8px; display: flex; flex-direction: column; gap: 13px; }
+  .form-row { display: flex; flex-direction: column; gap: 5px; }
+  .form-lbl { font-size: 11.5px; font-weight: 600; color: var(--ink-secondary); }
+  select, input[type="text"], textarea {
+    width: 100%; padding: 10px 12px;
+    border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+    font-family: inherit; font-size: 14px;
+    background: rgba(255,255,255,0.65); color: var(--ink);
+    outline: none; transition: border-color 0.14s, box-shadow 0.14s;
+    -webkit-appearance: none;
+  }
+  select:focus, input:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,113,227,0.14); }
+  textarea { resize: vertical; min-height: 54px; }
+  .modal-ftr { padding: 12px 20px 20px; display: flex; gap: 8px; justify-content: flex-end; }
+  .btn-cancel { padding:9px 18px; border-radius:10px; border:none; background:rgba(118,118,128,0.12); font-family:inherit; font-size:14px; font-weight:500; cursor:pointer; color:var(--ink-secondary); transition:background 0.12s; }
+  .btn-cancel:hover { background:rgba(118,118,128,0.2); }
+  .btn-save { padding:9px 22px; border-radius:10px; border:none; background:var(--accent); color:white; font-family:inherit; font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 2px 10px rgba(0,113,227,0.3); transition:all 0.12s; }
+  .btn-save:hover { background:var(--accent-hover); }
+  .btn-save:active { transform:scale(0.97); }
+
+  @media (max-width: 800px) {
+    .tbl-head, .week-row { grid-template-columns: 44px 1fr 1fr 1fr 1fr 1fr 50px 50px; }
+    .th-wie,.th-status,.th-act,.wie-cell,.status-cell,.actions-cell { display:none; }
+    .mon-l { display:none; }
+    header { padding: 28px 0 18px; }
+    .header-title h1 { font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+<!-- ── LOCK SCREEN ── -->
+<div id="lock-screen">
+  <div class="lock-card">
+    <div class="lock-icon">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="11" width="18" height="11" rx="2"/>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+    </div>
+    <div class="lock-title">Celles Planning</div>
+    <div class="lock-sub">Voer het wachtwoord in om door te gaan</div>
+    <div class="lock-input-wrap">
+      <input id="lock-input" type="password" placeholder="Wachtwoord" autocomplete="current-password" onkeydown="if(event.key==='Enter') unlock()">
+      <button class="toggle-pw" onclick="togglePw()" title="Toon/verberg">
+        <svg id="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+      </button>
+    </div>
+    <div id="lock-error">Onjuist wachtwoord, probeer opnieuw.</div>
+    <button id="lock-btn" onclick="unlock()">Inloggen</button>
+    <div class="lock-footer">celles.nl &middot; Priv&eacute; gebruik</div>
+  </div>
+</div>
+
+<!-- ── MAIN APP ── -->
+<div id="app">
+<div class="page">
+
+  <header>
+    <div class="header-title">
+      <h1>Celles <span class="light">2026</span></h1>
+      <div class="header-sub">Vakantiehuis · Planning per week</div>
+    </div>
+  </header>
+
+  <div class="stats" id="statsBar"></div>
+
+  <div class="legend-bar">
+    <div class="legend-grp">
+      <div class="legend-grp-lbl">Families</div>
+      <div class="legend-items">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--fons)"></div>Fons &amp; Simone</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--paul)"></div>Paul &amp; Merlijn</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--wouter)"></div>Wouter &amp; Rinske</div>
+      </div>
+    </div>
+    <div class="legend-grp">
+      <div class="legend-grp-lbl">Status</div>
+      <div class="legend-items">
+        <span class="spill s-zeker"><span class="s-dot"></span>Zeker</span>
+        <span class="spill s-misschien"><span class="s-dot"></span>Misschien</span>
+        <span class="spill s-geen"><span class="s-dot"></span>Geen gebruik</span>
+      </div>
+    </div>
+    <div class="legend-grp">
+      <div class="legend-grp-lbl">Accentuering</div>
+      <div class="legend-items">
+        <div class="legend-item"><div class="legend-swatch" style="background:rgba(255,149,0,0.15)"></div>Weekend</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:rgba(175,82,222,0.15)"></div>Feestdag</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <button class="chip active" data-filter="all" onclick="setFilter('all',this)">Alle weken</button>
+    <button class="chip" data-filter="Fons en Simone" onclick="setFilter('Fons en Simone',this)">
+      <span class="chip-dot" style="background:var(--fons)"></span>Fons &amp; Simone
+    </button>
+    <button class="chip" data-filter="Paul en Merlijn" onclick="setFilter('Paul en Merlijn',this)">
+      <span class="chip-dot" style="background:var(--paul)"></span>Paul &amp; Merlijn
+    </button>
+    <button class="chip" data-filter="Wouter en Rinske" onclick="setFilter('Wouter en Rinske',this)">
+      <span class="chip-dot" style="background:var(--wouter)"></span>Wouter &amp; Rinske
+    </button>
+    <div class="toolbar-spacer"></div>
+    <button class="add-btn" onclick="openAddModal()">
+      <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5.5 1v9M1 5.5h9" stroke="white" stroke-width="1.6" stroke-linecap="round"/></svg>
+      Week bewerken
+    </button>
+  </div>
+
+  <div class="tbl-wrap">
+    <div class="tbl-head">
+      <div class="th">Wk</div>
+      <div class="th">Ma</div>
+      <div class="th">Di</div>
+      <div class="th">Wo</div>
+      <div class="th">Do</div>
+      <div class="th">Vr</div>
+      <div class="th th-za">Za</div>
+      <div class="th th-zo">Zo</div>
+      <div class="th th-wie">Wie</div>
+      <div class="th th-status">Status</div>
+      <div class="th th-act"></div>
+    </div>
+    <div id="calBody"></div>
+  </div>
+
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h2 id="modalTitle">Week bewerken</h2>
+      <button class="modal-x" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-lbl">Weeknummer</div>
+        <input type="text" id="eWeek" readonly>
+      </div>
+      <div class="form-row">
+        <div class="form-lbl">Wie</div>
+        <select id="eWie">
+          <option value="">— Niemand —</option>
+          <option>Fons en Simone</option>
+          <option>Paul en Merlijn</option>
+          <option>Wouter en Rinske</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-lbl">Status</div>
+        <select id="eStatus">
+          <option value="">— Geen status —</option>
+          <option value="ZEKER">Zeker</option>
+          <option value="MISSCHIEN">Misschien</option>
+          <option value="GEEN GEBRUIK">Geen gebruik</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-lbl">Bijzonderheid</div>
+        <input type="text" id="eBijz" placeholder="bijv. kerstvakantie">
+      </div>
+      <div class="form-row">
+        <div class="form-lbl">Opmerking</div>
+        <textarea id="eOpmerking" placeholder="Optionele opmerking…"></textarea>
+      </div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn-cancel" onclick="closeModal()">Annuleren</button>
+      <button class="btn-save" onclick="saveEdit()">Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── ALL 2026 DATA FROM EXCEL ──────────────────────────────────────────────────
+const RAW_2026 = {
+  1:  { wie:'Paul en Merlijn',    status:'',           bijz:'Kerstvakantie' },
+  2:  { wie:'Wouter en Rinske',   status:'ZEKER',      bijz:'' },
+  3:  { wie:'Fons en Simone',     status:'',           bijz:'' },
+  4:  { wie:'Paul en Merlijn',    status:'',           bijz:'' },
+  5:  { wie:'Wouter en Rinske',   status:'ZEKER',      bijz:'' },
+  6:  { wie:'Fons en Simone',     status:'',           bijz:'' },
+  7:  { wie:'Paul en Merlijn',    status:'',           bijz:'' },
+  8:  { wie:'Wouter en Rinske',   status:'ZEKER',      bijz:'Voorjaarsvakantie midden' },
+  9:  { wie:'Fons en Simone',     status:'',           bijz:'' },
+  10: { wie:'Wouter en Rinske',   status:'GEEN GEBRUIK',bijz:'' },
+  11: { wie:'Paul en Merlijn',    status:'',           bijz:'' },
+  12: { wie:'Fons en Simone',     status:'',           bijz:'' },
+  13: { wie:'Paul en Merlijn',    status:'',           bijz:'' },
+  14: { wie:'Wouter en Rinske',   status:'ZEKER',      bijz:'Pasen' },
+  15: { wie:'Fons en Simone',     status:'',           bijz:'' },
+  16: { wie:'Paul en Merlijn',    status:'',           bijz:'' },
+  17: { wie:'Wouter en Rinske',   status:'ZEKER',      bijz:'' },
+  18: { wie:'Fons en Simone',     status:'',           bijz:'Koningsdag' },
+  19: { wie:'Wouter en Rinske',   status:'',           bijz:'Meivakantie' },
+  20: { wie:'Fons en Simone',     status:'',           bijz:'Hemelvaartsdag' },
+  21: { wie:'Paul en Merlijn',    status:'',           bijz:'Pinksteren' },
+  22: { wie:'Paul en Merlijn',    status:'',           bijz:'' },
+  23: { wie:'Wouter en Rinske',   status:'',           bijz:'' },
+  24: { wie:'Fons en Simone',     status:'',           bijz:'' },
+  25: { wie:'Paul en Merlijn',    status:'',           bijz:'' },
+  26: { wie:'Wouter en Rinske',   status:'',           bijz:'' },
+  27: { wie:'Fons en Simone',     status:'',           bijz:'' },
+  28: { wie:'',                   status:'',           bijz:'' },
+  29: { wie:'Paul en Merlijn',    status:'',           bijz:'' },
+  30: { wie:'Paul en Merlijn',    status:'',           bijz:'' },
+  31: { wie:'Wouter en Rinske',   status:'',           bijz:'' },
+  32: { wie:'Wouter en Rinske',   status:'',           bijz:'' },
+  33: { wie:'Fons en Simone',     status:'',           bijz:'' },
+  34: { wie:'Fons en Simone',     status:'',           bijz:'' },
+  35: { wie:'Paul en Merlijn',    status:'',           bijz:'' },
+  36: { wie:'Wouter en Rinske',   status:'',           bijz:'' },
+  37: { wie:'Fons en Simone',     status:'',           bijz:'' },
+  38: { wie:'Paul en Merlijn',    status:'',           bijz:'' },
+  39: { wie:'Wouter en Rinske',   status:'',           bijz:'' },
+  40: { wie:'Fons en Simone',     status:'',           bijz:'' },
+  41: { wie:'Paul en Merlijn',    status:'',           bijz:'' },
+  42: { wie:'Fons en Simone',     status:'',           bijz:'' },
+  43: { wie:'Wouter en Rinske',   status:'',           bijz:'Herfstvakantie midden' },
+  44: { wie:'Paul en Merlijn',    status:'',           bijz:'' },
+  45: { wie:'Wouter en Rinske',   status:'',           bijz:'' },
+  46: { wie:'Fons en Simone',     status:'',           bijz:'' },
+  47: { wie:'Paul en Merlijn',    status:'',           bijz:'' },
+  48: { wie:'Wouter en Rinske',   status:'',           bijz:'' },
+  49: { wie:'Fons en Simone',     status:'',           bijz:'' },
+  50: { wie:'Paul en Merlijn',    status:'',           bijz:'' },
+  51: { wie:'Wouter en Rinske',   status:'',           bijz:'' },
+  52: { wie:'Fons en Simone',     status:'',           bijz:'Kerstvakantie' },
+  53: { wie:'Paul en Merlijn',    status:'',           bijz:'Kerstvakantie' },
+};
+
+// Dutch public holidays 2026 (date strings YYYY-MM-DD)
+const HOLIDAYS_2026 = new Set([
+  '2026-01-01', // Nieuwjaarsdag
+  '2026-04-03', // Goede Vrijdag
+  '2026-04-05', // Eerste Paasdag
+  '2026-04-06', // Tweede Paasdag
+  '2026-04-27', // Koningsdag
+  '2026-05-05', // Bevrijdingsdag
+  '2026-05-14', // Hemelvaartsdag
+  '2026-05-24', // Eerste Pinksterdag
+  '2026-05-25', // Tweede Pinksterdag
+  '2026-12-25', // Eerste Kerstdag
+  '2026-12-26', // Tweede Kerstdag
+]);
+
+function dateStr(d) {
+  return d.getFullYear() + '-' +
+    String(d.getMonth()+1).padStart(2,'0') + '-' +
+    String(d.getDate()).padStart(2,'0');
+}
+
+const MONTHS_NL = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
+const MONTHS_SHORT = ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
+
+// Build week objects
+function isoWeekStart(year) {
+  let j4 = new Date(year, 0, 4);
+  let dow = (j4.getDay()+6)%7;
+  let s = new Date(j4); s.setDate(j4.getDate()-dow);
+  return s;
+}
+
+function buildWeeks() {
+  const start = isoWeekStart(2026);
+  const weeks = [];
+  for (let w = 1; w <= 53; w++) {
+    let mon = new Date(start); mon.setDate(start.getDate() + (w-1)*7);
+    if (mon.getFullYear() > 2026 && w > 52) break;
+    const days = Array.from({length:7}, (_,i) => {
+      let d = new Date(mon); d.setDate(mon.getDate()+i); return d;
+    });
+    const r = RAW_2026[w] || {};
+    const hasHoliday = days.some(d => HOLIDAYS_2026.has(dateStr(d)));
+    weeks.push({
+      week: w, days,
+      wie: r.wie || '', status: r.status || '',
+      bijz: r.bijz || '', opmerking: r.opmerking || '',
+      hasHoliday
+    });
+  }
+  return weeks;
+}
+
+let weekData = buildWeeks();
+let curFilter = 'all';
+let editRef = null;
+
+const TODAY = new Date(); TODAY.setHours(0,0,0,0);
+function isToday(d) { let dd=new Date(d); dd.setHours(0,0,0,0); return dd.getTime()===TODAY.getTime(); }
+function hasToday(days) { return days.some(isToday); }
+
+function wieClass(w) {
+  if (!w) return '';
+  if (w.includes('Fons')) return 'wie-fons';
+  if (w.includes('Paul')) return 'wie-paul';
+  return 'wie-wouter';
+}
+
+function rowClass(wie) {
+  if (!wie) return '';
+  if (wie.includes('Fons')) return 'row-fons';
+  if (wie.includes('Paul')) return 'row-paul';
+  return 'row-wouter';
+}
+
+function renderCalendar() {
+  const body = document.getElementById('calBody');
+  const frag = document.createDocumentFragment();
+  let lastMonth = -1;
+
+  weekData.forEach((w, i) => {
+    // Month divider when month of Monday changes
+    const monMonth = w.days[0].getMonth();
+    // Show divider at first week where Monday is in a new month
+    // Use the month of Saturday (day[5]) as the "main" month of the week
+    const mainMonth = w.days[5].getMonth(); // Saturday
+    if (mainMonth !== lastMonth) {
+      lastMonth = mainMonth;
+      const div = document.createElement('div');
+      div.className = 'month-div';
+      div.innerHTML = `<div></div><div class="month-div-name">${MONTHS_NL[mainMonth].toUpperCase()}</div>`;
+      frag.appendChild(div);
+    }
+
+    const row = document.createElement('div');
+    const isCur = hasToday(w.days);
+    let cls = 'week-row ' + rowClass(w.wie);
+    if (isCur) cls += ' cur-wk';
+    if (w.hasHoliday) cls += ' has-holiday';
+    if (curFilter !== 'all' && w.wie !== curFilter) cls += ' hidden';
+    row.className = cls;
+    row.dataset.idx = i;
+    row.style.animationDelay = (i * 5) + 'ms';
+
+    // day cells
+    let dayCells = '';
+    w.days.forEach((d, di) => {
+      const itd = isToday(d);
+      const isWknd = di >= 5; // Za=5, Zo=6
+      const isHol = HOLIDAYS_2026.has(dateStr(d));
+      const cellCls = isWknd ? (di===5 ? 'cell-za' : 'cell-zo') : '';
+      const numCls = isHol ? 'day-n holiday' : (isWknd ? 'day-n weekend' : 'day-n');
+
+      if (itd) {
+        dayCells += `<div class="cell day-cell ${cellCls}"><div class="today-ring"><div class="day-n" style="color:white">${d.getDate()}</div></div><div class="mon-l">${MONTHS_SHORT[d.getMonth()]}</div></div>`;
+      } else {
+        dayCells += `<div class="cell day-cell ${cellCls}"><div class="${numCls}">${d.getDate()}</div><div class="mon-l">${MONTHS_SHORT[d.getMonth()]}</div></div>`;
+      }
+    });
+
+    // wie pill
+    const wc = wieClass(w.wie);
+    const wiePart = w.wie
+      ? `<span class="wie-pill ${wc}"><span class="wie-dot-sm"></span>${w.wie}</span>`
+      : `<span class="wie-empty">Vrij</span>`;
+
+    // bijzonderheid tag
+    const isVakantie = w.bijz && (w.bijz.toLowerCase().includes('vakantie') || w.bijz.toLowerCase().includes('kerstvakanite'));
+    const bijzHtml = w.bijz
+      ? `<div class="bijz-tag ${isVakantie ? 'vakantie' : ''}">${w.bijz}</div>` : '';
+
+    // status
+    let sc = '', sl = w.status;
+    if (w.status === 'ZEKER') sc = 's-zeker';
+    else if (w.status === 'MISSCHIEN') sc = 's-misschien';
+    else if (w.status === 'GEEN GEBRUIK') { sc = 's-geen'; sl = 'Geen gebruik'; }
+    const statusPart = w.status
+      ? `<span class="spill ${sc}"><span class="s-dot"></span>${sl.charAt(0)+sl.slice(1).toLowerCase()}</span>`
+      : `<span class="s-empty">—</span>`;
+
+    row.innerHTML = `
+      <div class="cell wk-num-wrap">
+        <div class="wk-num${isCur?' cur':''}">${w.week}</div>
+        ${bijzHtml}
+      </div>
+      ${dayCells}
+      <div class="cell wie-cell" onclick="openEdit(${i})">
+        ${wiePart}
+        ${w.opmerking ? `<div class="opmerking">${w.opmerking}</div>` : ''}
+      </div>
+      <div class="cell status-cell">${statusPart}</div>
+      <div class="cell actions-cell">
+        <button class="icon-btn" title="Bewerken" onclick="openEdit(${i})">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M9.5 1.5l2 2-7 7-2.5.5.5-2.5 7-7z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button class="icon-btn del" title="Wissen" onclick="clearWeek(${i})">
+          <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 1l9 9M10 1L1 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    `;
+    frag.appendChild(row);
+  });
+
+  body.innerHTML = '';
+  body.appendChild(frag);
+  renderStats();
+}
+
+function renderStats() {
+  const zeker   = weekData.filter(w => w.status === 'ZEKER').length;
+  const miss    = weekData.filter(w => w.status === 'MISSCHIEN').length;
+  const vrij    = weekData.filter(w => !w.wie).length;
+  const fons    = weekData.filter(w => w.wie === 'Fons en Simone'  && w.status !== 'GEEN GEBRUIK').length;
+  const paul    = weekData.filter(w => w.wie === 'Paul en Merlijn'  && w.status !== 'GEEN GEBRUIK').length;
+  const wouter  = weekData.filter(w => w.wie === 'Wouter en Rinske' && w.status !== 'GEEN GEBRUIK').length;
+
+  document.getElementById('statsBar').innerHTML = `
+    <div class="stat-card"><div class="stat-val" style="color:var(--zeker-fg)">${zeker}</div><div class="stat-lbl">Weken zeker</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:var(--misschien-fg)">${miss}</div><div class="stat-lbl">Misschien</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:var(--ink-tertiary)">${vrij}</div><div class="stat-lbl">Vrij</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:var(--fons)">${fons}</div><div class="stat-lbl">Fons &amp; Simone</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:var(--paul)">${paul}</div><div class="stat-lbl">Paul &amp; Merlijn</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:var(--wouter)">${wouter}</div><div class="stat-lbl">Wouter &amp; Rinske</div></div>
+  `;
+}
+
+function setFilter(f, btn) {
+  curFilter = f;
+  document.querySelectorAll('.chip').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.week-row').forEach(row => {
+    const w = weekData[+row.dataset.idx];
+    if (!w) return;
+    const show = f === 'all' || w.wie === f;
+    // toggle hidden but keep other classes
+    row.classList.toggle('hidden', !show);
+  });
+  // Also re-render month dividers visibility — simple approach: just re-render
+  renderCalendar();
+  // Re-apply filter
+  if (f !== 'all') {
+    document.querySelectorAll('.week-row').forEach(row => {
+      const w = weekData[+row.dataset.idx];
+      if (w && w.wie !== f) row.classList.add('hidden');
+    });
+  }
+}
+
+function openEdit(idx) {
+  const w = weekData[idx];
+  editRef = idx;
+  document.getElementById('modalTitle').textContent = `Week ${w.week} — 2026`;
+  document.getElementById('eWeek').value = `Week ${w.week}`;
+  document.getElementById('eWie').value = w.wie || '';
+  document.getElementById('eStatus').value = w.status || '';
+  document.getElementById('eBijz').value = w.bijz || '';
+  document.getElementById('eOpmerking').value = w.opmerking || '';
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function openAddModal() {
+  const fi = weekData.findIndex(w => !w.wie);
+  openEdit(fi >= 0 ? fi : 0);
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  editRef = null;
+}
+
+function saveEdit() {
+  if (editRef === null) return;
+  const w = weekData[editRef];
+  w.wie       = document.getElementById('eWie').value;
+  w.status    = document.getElementById('eStatus').value;
+  w.bijz      = document.getElementById('eBijz').value;
+  w.opmerking = document.getElementById('eOpmerking').value;
+  closeModal();
+  renderCalendar();
+}
+
+function clearWeek(idx) {
+  Object.assign(weekData[idx], { wie:'', status:'', bijz:'', opmerking:'' });
+  renderCalendar();
+}
+
+document.getElementById('modalOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+});
+
+// Init
+renderCalendar();
+</script>
+</div><!-- /#app -->
+<script>
+// ── PASSWORD ─────────────────────────────────────────────────────────────────
+const PASSWORD = 'celles2026';
+
+function unlock() {
+  const input = document.getElementById('lock-input');
+  const err   = document.getElementById('lock-error');
+  if (input.value === PASSWORD) {
+    const screen = document.getElementById('lock-screen');
+    screen.style.transition = 'opacity 0.35s ease';
+    screen.style.opacity = '0';
+    setTimeout(() => {
+      screen.style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      renderCalendar();
+    }, 350);
+  } else {
+    err.classList.add('visible');
+    input.classList.add('error');
+    input.value = '';
+    setTimeout(() => input.classList.remove('error'), 400);
+    setTimeout(() => { input.focus(); }, 10);
+  }
+}
+
+function togglePw() {
+  const inp = document.getElementById('lock-input');
+  const icon = document.getElementById('eye-icon');
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>';
+  } else {
+    inp.type = 'password';
+    icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+  }
+}
+
+// Focus input on load
+window.addEventListener('load', () => document.getElementById('lock-input').focus());
+</script>
+</body>
+</html>
