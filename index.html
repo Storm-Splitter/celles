@@ -446,12 +446,78 @@
   .btn-save:active { transform:scale(0.97); }
 
   @media (max-width: 800px) {
-    .tbl-head, .week-row { grid-template-columns: 44px 1fr 1fr 1fr 1fr 1fr 50px 50px; }
+    .tbl-head, .week-row { grid-template-columns: 48px 1fr 1fr 1fr 1fr 1fr 54px 54px; }
     .th-wie,.th-status,.th-act,.wie-cell,.status-cell,.actions-cell { display:none; }
     .mon-l { display:none; }
     header { padding: 28px 0 18px; }
     .header-title h1 { font-size: 28px; }
-  }
+
+    /* Make rows tappable on mobile */
+    .week-row { cursor: pointer; position: relative; }
+    .week-row:active { background: rgba(0,0,0,0.04) !important; }
+
+    /* Family color bar on left edge */
+    .week-row.row-fons   { border-left: 3px solid var(--fons); }
+    .week-row.row-paul   { border-left: 3px solid var(--paul); }
+    .week-row.row-wouter { border-left: 3px solid var(--wouter); }
+
+    /* Bottom sheet modal on mobile */
+    .modal-overlay { align-items: flex-end; padding: 0; }
+    .modal {
+      max-width: 100%;
+      border-radius: 20px 20px 0 0;
+      transform: translateY(100%);
+      transition: transform 0.28s cubic-bezier(0.32,0.72,0,1);
+    }
+    .modal-overlay.open .modal { transform: translateY(0); }
+
+    /* Mobile drag handle */
+    .modal::before {
+      content: '';
+      display: block;
+      width: 36px; height: 4px;
+      background: rgba(0,0,0,0.15);
+      border-radius: 2px;
+      margin: 12px auto 0;
+    }
+
+    /* Toolbar scrollable on mobile */
+    .toolbar { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+    .toolbar::-webkit-scrollbar { display: none; }
+    .chip { flex-shrink: 0; }
+    .toolbar-spacer { display: none; }
+    .add-btn { flex-shrink: 0; }
+
+    /* Mobile: wie pill shown inside week col */
+    .mob-wie { display: none; }
+    @media (max-width: 800px) {
+      .mob-wie {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-top: 3px;
+      }
+      .mob-wie-dot {
+        width: 7px; height: 7px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+      .mob-wie-name {
+        font-size: 9px;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 38px;
+      }
+      .mob-status {
+        display: inline-block;
+        width: 6px; height: 6px;
+        border-radius: 50%;
+        margin-left: 2px;
+        flex-shrink: 0;
+      }
+    }
 </style>
 </head>
 <body>
@@ -795,6 +861,10 @@ function renderCalendar() {
     row.className    = cls;
     row.dataset.idx  = i;
     row.style.animationDelay = (i * 5) + 'ms';
+    row.onclick = function(e) {
+      if (e.target.closest && e.target.closest('button')) return;
+      openEdit(parseInt(this.dataset.idx));
+    };
 
     var dayCells = '';
     w.days.forEach(function(d, di) {
@@ -819,6 +889,12 @@ function renderCalendar() {
     var isVak    = w.bijz && w.bijz.toLowerCase().indexOf('vakantie') >= 0;
     var bijzHtml = w.bijz ? '<div class="bijz-tag' + (isVak ? ' vakantie' : '') + '">' + w.bijz + '</div>' : '';
 
+    // Mobile: color dot + short name in week col
+    var mobColor = !w.wie ? '#aeaeb2' : (w.wie.indexOf('Fons')>=0 ? '#ff6b35' : (w.wie.indexOf('Paul')>=0 ? '#007aff' : '#30b050'));
+    var mobName  = !w.wie ? 'Vrij' : w.wie.split(' ')[0];
+    var mobStatusColor = w.status==='ZEKER' ? '#1d7a35' : (w.status==='MISSCHIEN' ? '#b05000' : (w.status==='GEEN GEBRUIK' ? '#aeaeb2' : 'transparent'));
+    var mobWieHtml = '<div class="mob-wie"><div class="mob-wie-dot" style="background:' + mobColor + '"></div><div class="mob-wie-name" style="color:' + mobColor + '">' + mobName + '</div>' + (w.status ? '<div class="mob-status" style="background:' + mobStatusColor + '"></div>' : '') + '</div>';
+
     var sc = '', sl = w.status;
     if (w.status === 'ZEKER')        { sc = 's-zeker'; }
     else if (w.status === 'MISSCHIEN') { sc = 's-misschien'; }
@@ -828,7 +904,7 @@ function renderCalendar() {
       : '<span class="s-empty">&#x2014;</span>';
 
     row.innerHTML =
-      '<div class="cell wk-num-wrap"><div class="wk-num' + (isCur?' cur':'') + '">' + w.week + '</div>' + bijzHtml + '</div>' +
+      '<div class="cell wk-num-wrap"><div class="wk-num' + (isCur?' cur':'') + '">' + w.week + '</div>' + bijzHtml + mobWieHtml + '</div>' +
       dayCells +
       '<div class="cell wie-cell" onclick="openEdit(' + i + ')">' + wiePart + (w.opmerking ? '<div class="opmerking">' + w.opmerking + '</div>' : '') + '</div>' +
       '<div class="cell status-cell">' + statusPart + '</div>' +
@@ -840,6 +916,8 @@ function renderCalendar() {
           '<svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 1l9 9M10 1L1 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>' +
         '</button>' +
       '</div>';
+
+
 
     frag.appendChild(row);
   });
