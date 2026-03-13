@@ -136,7 +136,7 @@
   .wk-num-wrap{padding-left:14px;}
   .wk-num{font-size:12px;font-weight:600;color:var(--ink-3);}
   .wk-num.cur{color:var(--accent);font-weight:700;}
-  .bijz-tag{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#8e44ad;margin-top:2px;line-height:1.2;}
+  .bijz-tag{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-2);margin-top:2px;line-height:1.2;}
   .bijz-tag.school{color:#e07b00;}
 
   .day-cell{align-items:center;text-align:center;}
@@ -566,8 +566,8 @@ function renderCalendar(){
     var wp=w.wie?'<span class="wie-pill '+wpc+'"><span class="wie-dot-sm"></span>'+w.wie+'</span>':'<span class="wie-empty">Vrij</span>';
     var opm=w.opmerking?'<div class="opm">'+w.opmerking+'</div>':'';
 
-    // Bijzonderheid tag: use school vacation if no manual bijz
-    var bijzLabel=w.bijz||(w.schoolvak||'');
+    // Bijzonderheid tag: handmatig veld of schoolvakantie (geen feestdagen)
+    var bijzLabel=w.bijz||w.schoolvak||'';
     var isSchool=!w.bijz&&!!w.schoolvak;
     var bh=bijzLabel?'<div class="bijz-tag'+(isSchool?' school':'')+'">'+bijzLabel+'</div>':'';
 
