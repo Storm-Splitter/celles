@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Celles — Planning 2026</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root {
     --bg: #f5f5f7;
@@ -32,532 +33,229 @@
     --misschien-fg: #b05000;
     --geen-bg: rgba(142,142,147,0.12);
     --geen-fg: #6e6e73;
-    --radius: 14px;
-    --radius-sm: 9px;
+    --radius: 14px; --radius-sm: 9px;
     --blur: blur(20px) saturate(180%);
     --shadow: 0 2px 16px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.05);
     --shadow-md: 0 8px 28px rgba(0,0,0,0.12);
     --shadow-lg: 0 22px 64px rgba(0,0,0,0.2);
   }
-
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+  body { background: var(--bg); color: var(--ink); font-family: -apple-system,'Helvetica Neue',sans-serif; font-size: 14px; min-height: 100vh; }
+  body::before { content:''; position:fixed; inset:0; background: radial-gradient(ellipse 70% 50% at 10% 0%, rgba(0,122,255,0.06) 0%, transparent 70%), radial-gradient(ellipse 60% 40% at 90% 100%, rgba(48,176,80,0.05) 0%, transparent 70%); pointer-events:none; z-index:0; }
 
-  body {
-    background: var(--bg);
-    color: var(--ink);
-    font-family: -apple-system, 'Helvetica Neue', sans-serif;
-    font-size: 14px;
-    min-height: 100vh;
-  }
+  /* LOCK */
+  #lock-screen { position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; background:#f5f5f7; }
+  #lock-screen::before { content:''; position:absolute; inset:0; background: radial-gradient(ellipse 70% 50% at 15% 10%, rgba(0,122,255,0.07) 0%, transparent 70%), radial-gradient(ellipse 60% 40% at 85% 90%, rgba(48,176,80,0.05) 0%, transparent 70%); pointer-events:none; }
+  .lock-card { background:rgba(255,255,255,0.85); backdrop-filter:blur(24px) saturate(180%); -webkit-backdrop-filter:blur(24px) saturate(180%); border:1px solid rgba(0,0,0,0.08); border-radius:20px; padding:44px 40px 36px; width:100%; max-width:360px; box-shadow:0 24px 64px rgba(0,0,0,0.14),0 4px 16px rgba(0,0,0,0.08); text-align:center; position:relative; z-index:1; animation:lockIn 0.4s cubic-bezier(0.34,1.4,0.64,1) both; }
+  @keyframes lockIn { from{opacity:0;transform:scale(0.9) translateY(16px)} to{opacity:1;transform:scale(1) translateY(0)} }
+  .lock-icon { width:56px; height:56px; background:rgba(0,113,227,0.1); border-radius:16px; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; color:#0071e3; }
+  .lock-title { font-size:22px; font-weight:700; letter-spacing:-0.4px; color:#1d1d1f; margin-bottom:4px; }
+  .lock-sub { font-size:13px; color:#6e6e73; margin-bottom:20px; }
+  .lock-input { width:100%; padding:13px 14px; border:1.5px solid rgba(0,0,0,0.14); border-radius:11px; font-family:inherit; font-size:15px; background:rgba(255,255,255,0.7); color:#1d1d1f; outline:none; transition:border-color 0.15s,box-shadow 0.15s; -webkit-appearance:none; text-align:center; margin-bottom:10px; }
+  .lock-input:focus { border-color:#0071e3; box-shadow:0 0 0 3.5px rgba(0,113,227,0.18); }
+  .lock-input.shake { border-color:#ff3b30; box-shadow:0 0 0 3.5px rgba(255,59,48,0.15); animation:shake 0.35s ease; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-7px)} 40%{transform:translateX(7px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
+  #lock-error { font-size:12px; color:#ff3b30; height:20px; margin-bottom:8px; font-weight:500; opacity:0; transition:opacity 0.2s; }
+  #lock-error.show { opacity:1; }
+  #lock-btn { width:100%; padding:13px; background:#0071e3; color:white; border:none; border-radius:11px; font-family:inherit; font-size:15px; font-weight:600; cursor:pointer; transition:all 0.14s; box-shadow:0 2px 12px rgba(0,113,227,0.38); }
+  #lock-btn:hover { background:#0077ed; transform:scale(1.01); }
+  .lock-footer { margin-top:20px; font-size:11.5px; color:#aeaeb2; }
 
-  body::before {
-    content: '';
-    position: fixed; inset: 0;
-    background:
-      radial-gradient(ellipse 70% 50% at 10% 0%, rgba(0,122,255,0.06) 0%, transparent 70%),
-      radial-gradient(ellipse 60% 40% at 90% 100%, rgba(48,176,80,0.05) 0%, transparent 70%);
-    pointer-events: none; z-index: 0;
-  }
+  /* LOADING */
+  #loading { position:fixed; inset:0; z-index:500; display:none; align-items:center; justify-content:center; background:var(--bg); }
+  .spinner { width:32px; height:32px; border:3px solid rgba(0,113,227,0.2); border-top-color:#0071e3; border-radius:50%; animation:spin 0.7s linear infinite; }
+  @keyframes spin { to{transform:rotate(360deg)} }
 
-  /* ── LOCK SCREEN ── */
-  #lock-screen {
-    position: fixed; inset: 0; z-index: 9999;
-    display: flex; align-items: center; justify-content: center;
-    background: #f5f5f7;
-  }
+  /* TOAST */
+  #toast { position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(80px); background:rgba(30,30,32,0.92); color:white; padding:10px 20px; border-radius:20px; font-size:13px; font-weight:500; box-shadow:0 4px 20px rgba(0,0,0,0.25); z-index:1000; transition:transform 0.3s cubic-bezier(0.34,1.5,0.64,1),opacity 0.3s; opacity:0; pointer-events:none; white-space:nowrap; }
+  #toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
 
-  #lock-screen::before {
-    content: '';
-    position: absolute; inset: 0;
-    background:
-      radial-gradient(ellipse 70% 50% at 15% 10%, rgba(0,122,255,0.07) 0%, transparent 70%),
-      radial-gradient(ellipse 60% 40% at 85% 90%, rgba(48,176,80,0.05) 0%, transparent 70%);
-    pointer-events: none;
-  }
+  /* APP */
+  #app { display:none; }
+  .page { position:relative; z-index:1; max-width:1160px; margin:0 auto; padding:0 24px 80px; }
+  header { padding:48px 0 28px; display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+  .header-title h1 { font-size:38px; font-weight:700; letter-spacing:-1px; line-height:1; }
+  .header-title h1 .light { font-weight:200; color:var(--ink-secondary); }
+  .header-sub { font-size:13px; color:var(--ink-tertiary); margin-top:6px; }
+  .user-badge { background:rgba(0,113,227,0.1); color:var(--accent); padding:4px 10px; border-radius:20px; font-size:12px; font-weight:600; }
 
-  .lock-card {
-    background: rgba(255,255,255,0.85);
-    backdrop-filter: blur(24px) saturate(180%);
-    -webkit-backdrop-filter: blur(24px) saturate(180%);
-    border: 1px solid rgba(0,0,0,0.08);
-    border-radius: 20px;
-    padding: 44px 40px 36px;
-    width: 100%; max-width: 360px;
-    box-shadow: 0 24px 64px rgba(0,0,0,0.14), 0 4px 16px rgba(0,0,0,0.08);
-    text-align: center;
-    position: relative; z-index: 1;
-    animation: lockIn 0.4s cubic-bezier(0.34,1.4,0.64,1) both;
-  }
+  .stats { display:grid; grid-template-columns:repeat(auto-fill,minmax(128px,1fr)); gap:10px; margin-bottom:20px; }
+  .stat-card { background:var(--surface); backdrop-filter:var(--blur); -webkit-backdrop-filter:var(--blur); border:1px solid var(--border); border-radius:var(--radius); padding:15px 17px; box-shadow:var(--shadow); transition:transform 0.15s,box-shadow 0.15s; }
+  .stat-card:hover { transform:translateY(-1px); box-shadow:var(--shadow-md); }
+  .stat-val { font-size:28px; font-weight:700; letter-spacing:-0.5px; line-height:1; margin-bottom:4px; }
+  .stat-lbl { font-size:11px; color:var(--ink-secondary); font-weight:500; }
 
-  @keyframes lockIn {
-    from { opacity: 0; transform: scale(0.9) translateY(16px); }
-    to   { opacity: 1; transform: scale(1) translateY(0); }
-  }
+  .legend-bar { display:flex; gap:28px; flex-wrap:wrap; padding:12px 18px; background:var(--surface); backdrop-filter:var(--blur); -webkit-backdrop-filter:var(--blur); border:1px solid var(--border); border-radius:var(--radius-sm); box-shadow:var(--shadow); margin-bottom:16px; align-items:center; }
+  .legend-grp { display:flex; flex-direction:column; gap:5px; }
+  .legend-grp-lbl { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--ink-tertiary); }
+  .legend-items { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .legend-item { display:flex; align-items:center; gap:5px; font-size:12px; color:var(--ink-secondary); }
+  .legend-dot { width:8px; height:8px; border-radius:50%; }
+  .legend-swatch { width:18px; height:12px; border-radius:3px; }
 
-  .lock-icon {
-    width: 56px; height: 56px;
-    background: rgba(0,113,227,0.1);
-    border-radius: 16px;
-    display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 20px;
-    color: #0071e3;
-  }
+  .toolbar { display:flex; gap:7px; align-items:center; flex-wrap:wrap; margin-bottom:14px; }
+  .chip { display:flex; align-items:center; gap:5px; padding:6px 14px; border-radius:20px; border:1px solid var(--border); background:white; font-family:inherit; font-size:12px; font-weight:500; cursor:pointer; color:var(--ink-secondary); transition:all 0.14s; box-shadow:0 1px 3px rgba(0,0,0,0.05); }
+  .chip-dot { width:7px; height:7px; border-radius:50%; }
+  .chip:hover { border-color:var(--border-strong); }
+  .chip.active { background:var(--ink); color:white; border-color:var(--ink); box-shadow:0 2px 8px rgba(0,0,0,0.2); }
+  .toolbar-spacer { flex:1; }
+  .hist-btn { display:flex; align-items:center; gap:6px; padding:8px 16px; background:white; color:var(--ink-secondary); border:1px solid var(--border); border-radius:20px; font-family:inherit; font-size:13px; font-weight:500; cursor:pointer; transition:all 0.14s; box-shadow:0 1px 3px rgba(0,0,0,0.05); }
+  .hist-btn:hover { border-color:var(--border-strong); color:var(--ink); }
 
-  .lock-title {
-    font-size: 22px; font-weight: 700;
-    letter-spacing: -0.4px; color: #1d1d1f;
-    margin-bottom: 4px;
-  }
+  .tbl-wrap { background:var(--surface); backdrop-filter:var(--blur); -webkit-backdrop-filter:var(--blur); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; }
+  .tbl-head { display:grid; grid-template-columns:48px 1fr 1fr 1fr 1fr 1fr 60px 60px 185px 110px 64px; background:rgba(0,0,0,0.025); border-bottom:1px solid var(--border); }
+  .th { padding:9px 6px; font-size:10.5px; font-weight:600; color:var(--ink-tertiary); text-transform:uppercase; letter-spacing:0.07em; text-align:center; }
+  .th:first-child { text-align:left; padding-left:14px; }
+  .th-za,.th-zo { color:var(--orange); }
+  .th-wie { text-align:left; padding-left:12px; }
 
-  .lock-sub {
-    font-size: 13px; color: #6e6e73;
-    margin-bottom: 28px;
-  }
+  .week-row { display:grid; grid-template-columns:48px 1fr 1fr 1fr 1fr 1fr 60px 60px 185px 110px 64px; border-bottom:1px solid var(--border); transition:background 0.1s; animation:fadeUp 0.25s ease both; cursor:pointer; }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(3px)} to{opacity:1;transform:none} }
+  .week-row:last-child { border-bottom:none; }
+  .week-row.hidden { display:none; }
+  .week-row.cur-wk { outline:2px solid rgba(0,113,227,0.25); outline-offset:-1px; }
+  .row-fons { background:var(--fons-row); }
+  .row-paul { background:var(--paul-row); }
+  .row-wouter { background:var(--wouter-row); }
+  .cell-za,.cell-zo { background:rgba(255,149,0,0.07) !important; }
+  .week-row.has-holiday .cell-za,.week-row.has-holiday .cell-zo { background:rgba(175,82,222,0.08) !important; }
+  .week-row:hover { filter:brightness(0.975); }
 
-  .lock-input-wrap { position: relative; margin-bottom: 8px; }
+  .cell { padding:9px 6px; display:flex; flex-direction:column; justify-content:center; min-height:52px; }
+  .wk-num-wrap { padding-left:14px; }
+  .wk-num { font-size:12px; font-weight:600; color:var(--ink-tertiary); }
+  .wk-num.cur { color:var(--accent); font-weight:700; }
+  .bijz-tag { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:#af52de; margin-top:2px; line-height:1.2; }
+  .bijz-tag.vakantie { color:var(--orange); }
 
-  #lock-input {
-    width: 100%;
-    padding: 13px 44px 13px 14px;
-    border: 1.5px solid rgba(0,0,0,0.14);
-    border-radius: 11px;
-    font-family: inherit; font-size: 15px;
-    background: rgba(255,255,255,0.7);
-    color: #1d1d1f;
-    outline: none;
-    letter-spacing: 0.06em;
-    transition: border-color 0.15s, box-shadow 0.15s;
-    -webkit-appearance: none;
-    text-align: center;
-  }
+  .day-cell { align-items:center; text-align:center; }
+  .day-n { font-size:13px; font-weight:400; color:var(--ink); line-height:1; }
+  .day-n.weekend { color:var(--orange); font-weight:500; }
+  .day-n.holiday { color:#af52de; font-weight:600; }
+  .mon-l { font-size:9px; color:var(--ink-tertiary); text-transform:uppercase; letter-spacing:0.04em; margin-top:2px; }
+  .today-ring { width:27px; height:27px; background:var(--accent); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto; }
+  .today-ring .day-n { color:white; font-weight:600; font-size:12px; }
 
-  #lock-input:focus {
-    border-color: #0071e3;
-    box-shadow: 0 0 0 3.5px rgba(0,113,227,0.18);
-  }
+  .wie-cell { padding:7px 12px; }
+  .wie-pill { display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:20px; font-size:12px; font-weight:600; white-space:nowrap; }
+  .wie-dot-sm { width:6px; height:6px; border-radius:50%; background:currentColor; opacity:0.65; }
+  .wie-fons { background:var(--fons-bg); color:var(--fons); }
+  .wie-paul { background:var(--paul-bg); color:var(--paul); }
+  .wie-wouter { background:var(--wouter-bg); color:var(--wouter); }
+  .wie-empty { color:var(--ink-tertiary); font-size:12px; font-style:italic; padding:4px 0; }
+  .opmerking { font-size:11px; color:var(--ink-tertiary); margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
-  #lock-input.shake {
-    border-color: #ff3b30;
-    box-shadow: 0 0 0 3.5px rgba(255,59,48,0.15);
-    animation: shake 0.35s ease;
-  }
-
-  @keyframes shake {
-    0%,100% { transform: translateX(0); }
-    20%     { transform: translateX(-7px); }
-    40%     { transform: translateX(7px); }
-    60%     { transform: translateX(-4px); }
-    80%     { transform: translateX(4px); }
-  }
-
-  .toggle-pw {
-    position: absolute; right: 12px; top: 50%;
-    transform: translateY(-50%);
-    background: none; border: none; cursor: pointer;
-    color: #aeaeb2; padding: 4px;
-    transition: color 0.12s;
-  }
-  .toggle-pw:hover { color: #6e6e73; }
-
-  #lock-error {
-    font-size: 12px; color: #ff3b30;
-    height: 20px; margin-bottom: 8px;
-    font-weight: 500;
-    opacity: 0; transition: opacity 0.2s;
-  }
-  #lock-error.show { opacity: 1; }
-
-  #lock-btn {
-    width: 100%;
-    padding: 13px;
-    background: #0071e3; color: white;
-    border: none; border-radius: 11px;
-    font-family: inherit; font-size: 15px; font-weight: 600;
-    cursor: pointer;
-    transition: all 0.14s;
-    box-shadow: 0 2px 12px rgba(0,113,227,0.38);
-    letter-spacing: -0.1px;
-  }
-  #lock-btn:hover { background: #0077ed; transform: scale(1.01); }
-  #lock-btn:active { transform: scale(0.98); }
-
-  .lock-footer {
-    margin-top: 20px;
-    font-size: 11.5px; color: #aeaeb2;
-  }
-
-  /* ── MAIN APP ── */
-  #app { display: none; }
-
-  .page {
-    position: relative; z-index: 1;
-    max-width: 1160px; margin: 0 auto;
-    padding: 0 24px 80px;
-  }
-
-  /* HEADER */
-  header {
-    padding: 48px 0 28px;
-    display: flex; align-items: flex-end;
-    justify-content: space-between;
-    gap: 16px; flex-wrap: wrap;
-  }
-
-  .header-title h1 {
-    font-size: 38px; font-weight: 700;
-    letter-spacing: -1px; line-height: 1;
-  }
-  .header-title h1 .light { font-weight: 200; color: var(--ink-secondary); }
-  .header-sub { font-size: 13px; color: var(--ink-tertiary); margin-top: 6px; }
-
-  /* STATS */
-  .stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
-    gap: 10px; margin-bottom: 20px;
-  }
-
-  .stat-card {
-    background: var(--surface);
-    backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
-    border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 15px 17px;
-    box-shadow: var(--shadow);
-    transition: transform 0.15s, box-shadow 0.15s;
-  }
-  .stat-card:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
-  .stat-val { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; line-height: 1; margin-bottom: 4px; }
-  .stat-lbl { font-size: 11px; color: var(--ink-secondary); font-weight: 500; }
-
-  /* LEGEND */
-  .legend-bar {
-    display: flex; gap: 28px; flex-wrap: wrap;
-    padding: 12px 18px;
-    background: var(--surface);
-    backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm); box-shadow: var(--shadow);
-    margin-bottom: 16px; align-items: center;
-  }
-  .legend-grp { display: flex; flex-direction: column; gap: 5px; }
-  .legend-grp-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-tertiary); }
-  .legend-items { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--ink-secondary); }
-  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
-  .legend-swatch { width: 18px; height: 12px; border-radius: 3px; }
-
-  /* TOOLBAR */
-  .toolbar { display: flex; gap: 7px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
-
-  .chip {
-    display: flex; align-items: center; gap: 5px;
-    padding: 6px 14px; border-radius: 20px;
-    border: 1px solid var(--border); background: white;
-    font-family: inherit; font-size: 12px; font-weight: 500;
-    cursor: pointer; color: var(--ink-secondary);
-    transition: all 0.14s; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-  }
-  .chip-dot { width: 7px; height: 7px; border-radius: 50%; }
-  .chip:hover { border-color: var(--border-strong); }
-  .chip.active { background: var(--ink); color: white; border-color: var(--ink); box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
-  .toolbar-spacer { flex: 1; }
-
-  .add-btn {
-    display: flex; align-items: center; gap: 6px;
-    padding: 8px 18px; background: var(--accent); color: white;
-    border: none; border-radius: 20px;
-    font-family: inherit; font-size: 13px; font-weight: 600;
-    cursor: pointer; transition: all 0.14s;
-    box-shadow: 0 2px 10px rgba(0,113,227,0.38);
-  }
-  .add-btn:hover { background: var(--accent-hover); transform: scale(1.02); }
-  .add-btn:active { transform: scale(0.97); }
-
-  /* TABLE */
-  .tbl-wrap {
-    background: var(--surface);
-    backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
-    border: 1px solid var(--border);
-    border-radius: var(--radius); box-shadow: var(--shadow);
-    overflow: hidden;
-  }
-
-  .tbl-head {
-    display: grid;
-    grid-template-columns: 48px 1fr 1fr 1fr 1fr 1fr 60px 60px 185px 110px 64px;
-    background: rgba(0,0,0,0.025);
-    border-bottom: 1px solid var(--border);
-  }
-
-  .th {
-    padding: 9px 6px;
-    font-size: 10.5px; font-weight: 600;
-    color: var(--ink-tertiary);
-    text-transform: uppercase; letter-spacing: 0.07em;
-    text-align: center;
-  }
-  .th:first-child { text-align: left; padding-left: 14px; }
-  .th-za, .th-zo { color: var(--orange); }
-  .th-wie { text-align: left; padding-left: 12px; }
-
-  .week-row {
-    display: grid;
-    grid-template-columns: 48px 1fr 1fr 1fr 1fr 1fr 60px 60px 185px 110px 64px;
-    border-bottom: 1px solid var(--border);
-    transition: background 0.1s;
-    animation: fadeUp 0.25s ease both;
-  }
-
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(3px); }
-    to   { opacity: 1; transform: none; }
-  }
-
-  .week-row:last-child { border-bottom: none; }
-  .week-row.hidden { display: none; }
-  .week-row.cur-wk { outline: 2px solid rgba(0,113,227,0.25); outline-offset: -1px; }
-
-  .row-fons   { background: var(--fons-row); }
-  .row-paul   { background: var(--paul-row); }
-  .row-wouter { background: var(--wouter-row); }
-
-  .cell-za, .cell-zo { background: rgba(255,149,0,0.07) !important; }
-  .week-row.has-holiday .cell-za,
-  .week-row.has-holiday .cell-zo { background: rgba(175,82,222,0.08) !important; }
-
-  .week-row:hover { filter: brightness(0.975); }
-
-  .cell {
-    padding: 9px 6px;
-    display: flex; flex-direction: column; justify-content: center;
-    min-height: 52px;
-  }
-
-  .wk-num-wrap { padding-left: 14px; }
-  .wk-num { font-size: 12px; font-weight: 600; color: var(--ink-tertiary); }
-  .wk-num.cur { color: var(--accent); font-weight: 700; }
-  .bijz-tag { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #af52de; margin-top: 2px; line-height: 1.2; }
-  .bijz-tag.vakantie { color: var(--orange); }
-
-  .day-cell { align-items: center; text-align: center; }
-  .day-n { font-size: 13px; font-weight: 400; color: var(--ink); line-height: 1; }
-  .day-n.weekend { color: var(--orange); font-weight: 500; }
-  .day-n.holiday { color: #af52de; font-weight: 600; }
-  .mon-l { font-size: 9px; color: var(--ink-tertiary); text-transform: uppercase; letter-spacing: 0.04em; margin-top: 2px; }
-
-  .today-ring {
-    width: 27px; height: 27px;
-    background: var(--accent); border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    margin: 0 auto;
-  }
-  .today-ring .day-n { color: white; font-weight: 600; font-size: 12px; }
-
-  .wie-cell { padding: 7px 12px; cursor: pointer; }
-  .wie-cell:hover .wie-pill { opacity: 0.82; }
-
-  .wie-pill {
-    display: inline-flex; align-items: center; gap: 5px;
-    padding: 4px 10px; border-radius: 20px;
-    font-size: 12px; font-weight: 600;
-    transition: opacity 0.12s; white-space: nowrap;
-  }
-  .wie-dot-sm { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: 0.65; }
-  .wie-fons   { background: var(--fons-bg);   color: var(--fons); }
-  .wie-paul   { background: var(--paul-bg);   color: var(--paul); }
-  .wie-wouter { background: var(--wouter-bg); color: var(--wouter); }
-  .wie-empty  { color: var(--ink-tertiary); font-size: 12px; font-style: italic; padding: 4px 0; }
-  .opmerking  { font-size: 11px; color: var(--ink-tertiary); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-  .status-cell { padding: 7px 8px; }
-  .s-empty { color: var(--ink-tertiary); font-style: italic; font-size: 12px; }
-  .spill   { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:20px; font-size:11px; font-weight:600; }
-  .s-dot   { width:5px; height:5px; border-radius:50%; background:currentColor; }
-  .s-zeker     { background:var(--zeker-bg);    color:var(--zeker-fg); }
+  .status-cell { padding:7px 8px; }
+  .s-empty { color:var(--ink-tertiary); font-style:italic; font-size:12px; }
+  .spill { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:20px; font-size:11px; font-weight:600; }
+  .s-dot { width:5px; height:5px; border-radius:50%; background:currentColor; }
+  .s-zeker { background:var(--zeker-bg); color:var(--zeker-fg); }
   .s-misschien { background:var(--misschien-bg); color:var(--misschien-fg); }
-  .s-geen      { background:var(--geen-bg);      color:var(--geen-fg); }
+  .s-geen { background:var(--geen-bg); color:var(--geen-fg); }
 
-  .actions-cell { flex-direction: row; align-items: center; justify-content: flex-end; gap: 3px; padding: 7px 10px; }
+  .actions-cell { flex-direction:row; align-items:center; justify-content:flex-end; gap:3px; padding:7px 10px; }
   .icon-btn { width:28px; height:28px; display:flex; align-items:center; justify-content:center; background:transparent; border:none; border-radius:6px; cursor:pointer; color:var(--ink-tertiary); transition:all 0.12s; }
   .icon-btn:hover { background:rgba(0,0,0,0.06); color:var(--ink); }
-  .icon-btn.del:hover { background:rgba(255,59,48,0.1); color:var(--red); }
 
-  .month-div {
-    display: grid;
-    grid-template-columns: 48px 1fr;
-    background: rgba(0,0,0,0.018);
-    border-bottom: 1px solid var(--border);
-    padding: 6px 0 6px 14px;
-    align-items: center;
-  }
-  .month-div-name { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-tertiary); grid-column: 2; }
+  .month-div { display:grid; grid-template-columns:48px 1fr; background:rgba(0,0,0,0.018); border-bottom:1px solid var(--border); padding:6px 0 6px 14px; align-items:center; }
+  .month-div-name { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--ink-tertiary); grid-column:2; }
 
   /* MODAL */
-  .modal-overlay {
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.45);
-    z-index: 200;
-    display: flex; align-items: center; justify-content: center;
-    padding: 20px;
-    opacity: 0; pointer-events: none;
-    transition: opacity 0.18s;
-    backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
-  }
-  .modal-overlay.open { opacity: 1; pointer-events: all; }
-
-  .modal {
-    background: rgba(255,255,255,0.96);
-    backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
-    border: 1px solid rgba(255,255,255,0.6);
-    border-radius: 18px; width: 100%; max-width: 390px;
-    transform: scale(0.93) translateY(12px);
-    transition: transform 0.22s cubic-bezier(0.34,1.5,0.64,1);
-    box-shadow: var(--shadow-lg); overflow: hidden;
-  }
-  .modal-overlay.open .modal { transform: scale(1) translateY(0); }
-
-  .modal-hdr { padding: 20px 20px 0; display: flex; justify-content: space-between; align-items: center; }
-  .modal-hdr h2 { font-size: 17px; font-weight: 700; letter-spacing: -0.2px; }
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:200; display:flex; align-items:center; justify-content:center; padding:20px; opacity:0; pointer-events:none; transition:opacity 0.18s; backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px); }
+  .modal-overlay.open { opacity:1; pointer-events:all; }
+  .modal { background:rgba(255,255,255,0.96); backdrop-filter:var(--blur); -webkit-backdrop-filter:var(--blur); border:1px solid rgba(255,255,255,0.6); border-radius:18px; width:100%; max-width:420px; transform:scale(0.93) translateY(12px); transition:transform 0.22s cubic-bezier(0.34,1.5,0.64,1); box-shadow:var(--shadow-lg); overflow:hidden; }
+  .modal-overlay.open .modal { transform:scale(1) translateY(0); }
+  .modal-hdr { padding:20px 20px 0; display:flex; justify-content:space-between; align-items:center; }
+  .modal-hdr h2 { font-size:17px; font-weight:700; letter-spacing:-0.2px; }
   .modal-x { width:28px; height:28px; background:rgba(118,118,128,0.12); border:none; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--ink-secondary); font-size:14px; transition:background 0.12s; }
   .modal-x:hover { background:rgba(118,118,128,0.22); }
-  .modal-body { padding: 16px 20px 8px; display: flex; flex-direction: column; gap: 13px; }
-  .form-row { display: flex; flex-direction: column; gap: 5px; }
-  .form-lbl { font-size: 11.5px; font-weight: 600; color: var(--ink-secondary); }
-
-  select, input[type="text"], textarea {
-    width: 100%; padding: 10px 12px;
-    border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
-    font-family: inherit; font-size: 14px;
-    background: rgba(255,255,255,0.65); color: var(--ink);
-    outline: none; transition: border-color 0.14s, box-shadow 0.14s;
-    -webkit-appearance: none;
-  }
-  select:focus, input[type="text"]:focus, textarea:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(0,113,227,0.14);
-  }
-  textarea { resize: vertical; min-height: 54px; }
-
-  .modal-ftr { padding: 12px 20px 20px; display: flex; gap: 8px; justify-content: flex-end; }
+  .modal-body { padding:16px 20px 8px; display:flex; flex-direction:column; gap:13px; }
+  .form-row { display:flex; flex-direction:column; gap:5px; }
+  .form-lbl { font-size:11.5px; font-weight:600; color:var(--ink-secondary); }
+  select, input[type="text"], textarea { width:100%; padding:10px 12px; border:1px solid var(--border-strong); border-radius:var(--radius-sm); font-family:inherit; font-size:14px; background:rgba(255,255,255,0.65); color:var(--ink); outline:none; transition:border-color 0.14s,box-shadow 0.14s; -webkit-appearance:none; }
+  select:focus, input[type="text"]:focus, textarea:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(0,113,227,0.14); }
+  textarea { resize:vertical; min-height:54px; }
+  .modal-ftr { padding:12px 20px 20px; display:flex; gap:8px; justify-content:flex-end; }
   .btn-cancel { padding:9px 18px; border-radius:10px; border:none; background:rgba(118,118,128,0.12); font-family:inherit; font-size:14px; font-weight:500; cursor:pointer; color:var(--ink-secondary); transition:background 0.12s; }
   .btn-cancel:hover { background:rgba(118,118,128,0.2); }
   .btn-save { padding:9px 22px; border-radius:10px; border:none; background:var(--accent); color:white; font-family:inherit; font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 2px 10px rgba(0,113,227,0.3); transition:all 0.12s; }
   .btn-save:hover { background:var(--accent-hover); }
   .btn-save:active { transform:scale(0.97); }
+  .btn-save:disabled { opacity:0.6; cursor:default; }
 
-  @media (max-width: 800px) {
-    .tbl-head, .week-row { grid-template-columns: 48px 1fr 1fr 1fr 1fr 1fr 54px 54px; }
+  /* HISTORY */
+  .hist-list { max-height:400px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; padding:16px 20px; }
+  .hist-item { background:rgba(0,0,0,0.025); border-radius:10px; padding:10px 14px; }
+  .hist-meta { font-size:11px; color:var(--ink-tertiary); margin-bottom:4px; }
+  .hist-meta strong { color:var(--ink-secondary); }
+  .hist-change { font-size:12px; color:var(--ink); line-height:1.6; }
+  .hist-arrow { color:var(--ink-tertiary); margin:0 4px; }
+  .hist-empty { text-align:center; color:var(--ink-tertiary); font-size:13px; padding:32px 0; }
+
+  /* MOBILE */
+  .mob-wie { display:none; }
+  @media (max-width:800px) {
+    .tbl-head,.week-row { grid-template-columns:48px 1fr 1fr 1fr 1fr 1fr 54px 54px; }
     .th-wie,.th-status,.th-act,.wie-cell,.status-cell,.actions-cell { display:none; }
     .mon-l { display:none; }
-    header { padding: 28px 0 18px; }
-    .header-title h1 { font-size: 28px; }
-
-    /* Make rows tappable on mobile */
-    .week-row { cursor: pointer; position: relative; }
-    .week-row:active { background: rgba(0,0,0,0.04) !important; }
-
-    /* Family color bar on left edge */
-    .week-row.row-fons   { border-left: 3px solid var(--fons); }
-    .week-row.row-paul   { border-left: 3px solid var(--paul); }
-    .week-row.row-wouter { border-left: 3px solid var(--wouter); }
-
-    /* Bottom sheet modal on mobile */
-    .modal-overlay { align-items: flex-end; padding: 0; }
-    .modal {
-      max-width: 100%;
-      border-radius: 20px 20px 0 0;
-      transform: translateY(100%);
-      transition: transform 0.28s cubic-bezier(0.32,0.72,0,1);
-    }
-    .modal-overlay.open .modal { transform: translateY(0); }
-
-    /* Mobile drag handle */
-    .modal::before {
-      content: '';
-      display: block;
-      width: 36px; height: 4px;
-      background: rgba(0,0,0,0.15);
-      border-radius: 2px;
-      margin: 12px auto 0;
-    }
-
-    /* Toolbar scrollable on mobile */
-    .toolbar { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
-    .toolbar::-webkit-scrollbar { display: none; }
-    .chip { flex-shrink: 0; }
-    .toolbar-spacer { display: none; }
-    .add-btn { flex-shrink: 0; }
-
-    /* Mobile: wie pill shown inside week col */
-    .mob-wie { display: none; }
-    @media (max-width: 800px) {
-      .mob-wie {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        margin-top: 3px;
-      }
-      .mob-wie-dot {
-        width: 7px; height: 7px;
-        border-radius: 50%;
-        flex-shrink: 0;
-      }
-      .mob-wie-name {
-        font-size: 9px;
-        font-weight: 600;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 38px;
-      }
-      .mob-status {
-        display: inline-block;
-        width: 6px; height: 6px;
-        border-radius: 50%;
-        margin-left: 2px;
-        flex-shrink: 0;
-      }
-    }
+    header { padding:28px 0 18px; }
+    .header-title h1 { font-size:28px; }
+    .week-row.row-fons { border-left:3px solid var(--fons); }
+    .week-row.row-paul { border-left:3px solid var(--paul); }
+    .week-row.row-wouter { border-left:3px solid var(--wouter); }
+    .modal-overlay { align-items:flex-end; padding:0; }
+    .modal { max-width:100%; border-radius:20px 20px 0 0; transform:translateY(100%); transition:transform 0.28s cubic-bezier(0.32,0.72,0,1); }
+    .modal-overlay.open .modal { transform:translateY(0); }
+    .modal::before { content:''; display:block; width:36px; height:4px; background:rgba(0,0,0,0.15); border-radius:2px; margin:12px auto 0; }
+    .toolbar { flex-wrap:nowrap; overflow-x:auto; padding-bottom:4px; -webkit-overflow-scrolling:touch; }
+    .toolbar::-webkit-scrollbar { display:none; }
+    .chip,.hist-btn { flex-shrink:0; }
+    .toolbar-spacer { display:none; }
+    .stats { grid-template-columns:repeat(3,1fr); }
+    .stat-val { font-size:22px; }
+    .mob-wie { display:flex; align-items:center; gap:4px; margin-top:3px; }
+    .mob-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+    .mob-name { font-size:9px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:38px; }
+    .mob-sc { display:inline-block; width:6px; height:6px; border-radius:50%; margin-left:2px; flex-shrink:0; }
+  }
 </style>
 </head>
 <body>
 
-<!-- ── LOCK SCREEN ── -->
+<!-- LOCK -->
 <div id="lock-screen">
   <div class="lock-card">
     <div class="lock-icon">
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="11" width="18" height="11" rx="2"/>
-        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-      </svg>
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
     </div>
     <div class="lock-title">Celles Planning</div>
-    <div class="lock-sub">Voer het wachtwoord in om door te gaan</div>
-    <div class="lock-input-wrap">
-      <input id="lock-input" type="password" placeholder="Wachtwoord"
-        autocomplete="current-password"
-        onkeydown="if(event.key==='Enter') unlock()">
-      <button class="toggle-pw" onclick="togglePw()" title="Toon/verberg">
-        <svg id="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-          <circle cx="12" cy="12" r="3"/>
-        </svg>
-      </button>
-    </div>
-    <div id="lock-error">Onjuist wachtwoord, probeer opnieuw.</div>
+    <div class="lock-sub">Voer je naam en wachtwoord in</div>
+    <select class="lock-input" id="lock-name" style="cursor:pointer;letter-spacing:0">
+      <option value="">&#x2014; Kies je naam &#x2014;</option>
+      <option>Fons en Simone</option>
+      <option>Paul en Merlijn</option>
+      <option>Wouter en Rinske</option>
+    </select>
+    <input class="lock-input" id="lock-pw" type="password" placeholder="Wachtwoord" autocomplete="current-password">
+    <div id="lock-error">Onjuist wachtwoord of naam ontbreekt.</div>
     <button id="lock-btn" onclick="unlock()">Inloggen</button>
     <div class="lock-footer">celles.nl &middot; Priv&eacute; gebruik</div>
   </div>
 </div>
 
-<!-- ── MAIN APP ── -->
+<div id="loading"><div class="spinner"></div></div>
+<div id="toast"></div>
+
+<!-- APP -->
 <div id="app">
   <div class="page">
-
     <header>
       <div class="header-title">
         <h1>Celles <span class="light">2026</span></h1>
         <div class="header-sub">Vakantiehuis &middot; Planning per week</div>
+      </div>
+      <div style="font-size:12px;color:var(--ink-tertiary);display:flex;align-items:center;gap:6px;">
+        Ingelogd als <span class="user-badge" id="userBadge"></span>
       </div>
     </header>
 
@@ -591,408 +289,242 @@
 
     <div class="toolbar">
       <button class="chip active" onclick="setFilter('all',this)">Alle weken</button>
-      <button class="chip" onclick="setFilter('Fons en Simone',this)">
-        <span class="chip-dot" style="background:var(--fons)"></span>Fons &amp; Simone
-      </button>
-      <button class="chip" onclick="setFilter('Paul en Merlijn',this)">
-        <span class="chip-dot" style="background:var(--paul)"></span>Paul &amp; Merlijn
-      </button>
-      <button class="chip" onclick="setFilter('Wouter en Rinske',this)">
-        <span class="chip-dot" style="background:var(--wouter)"></span>Wouter &amp; Rinske
-      </button>
+      <button class="chip" onclick="setFilter('Fons en Simone',this)"><span class="chip-dot" style="background:var(--fons)"></span>Fons &amp; Simone</button>
+      <button class="chip" onclick="setFilter('Paul en Merlijn',this)"><span class="chip-dot" style="background:var(--paul)"></span>Paul &amp; Merlijn</button>
+      <button class="chip" onclick="setFilter('Wouter en Rinske',this)"><span class="chip-dot" style="background:var(--wouter)"></span>Wouter &amp; Rinske</button>
       <div class="toolbar-spacer"></div>
-      <button class="add-btn" onclick="openAddModal()">
-        <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5.5 1v9M1 5.5h9" stroke="white" stroke-width="1.6" stroke-linecap="round"/></svg>
-        Week bewerken
+      <button class="hist-btn" onclick="openHistory()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Geschiedenis
       </button>
     </div>
 
     <div class="tbl-wrap">
       <div class="tbl-head">
         <div class="th">Wk</div>
-        <div class="th">Ma</div>
-        <div class="th">Di</div>
-        <div class="th">Wo</div>
-        <div class="th">Do</div>
-        <div class="th">Vr</div>
-        <div class="th th-za">Za</div>
-        <div class="th th-zo">Zo</div>
+        <div class="th">Ma</div><div class="th">Di</div><div class="th">Wo</div><div class="th">Do</div><div class="th">Vr</div>
+        <div class="th th-za">Za</div><div class="th th-zo">Zo</div>
         <div class="th th-wie">Wie</div>
         <div class="th th-status">Status</div>
         <div class="th th-act"></div>
       </div>
       <div id="calBody"></div>
     </div>
-
-  </div><!-- /.page -->
-</div><!-- /#app -->
+  </div>
+</div>
 
 <!-- EDIT MODAL -->
-<div class="modal-overlay" id="modalOverlay">
+<div class="modal-overlay" id="editModal">
   <div class="modal">
     <div class="modal-hdr">
       <h2 id="modalTitle">Week bewerken</h2>
-      <button class="modal-x" onclick="closeModal()">&#x2715;</button>
+      <button class="modal-x" onclick="closeModal('editModal')">&#x2715;</button>
     </div>
     <div class="modal-body">
-      <div class="form-row">
-        <div class="form-lbl">Weeknummer</div>
-        <input type="text" id="eWeek" readonly>
-      </div>
-      <div class="form-row">
-        <div class="form-lbl">Wie</div>
+      <div class="form-row"><div class="form-lbl">Weeknummer</div><input type="text" id="eWeek" readonly></div>
+      <div class="form-row"><div class="form-lbl">Wie</div>
         <select id="eWie">
           <option value="">&#x2014; Niemand &#x2014;</option>
-          <option>Fons en Simone</option>
-          <option>Paul en Merlijn</option>
-          <option>Wouter en Rinske</option>
+          <option>Fons en Simone</option><option>Paul en Merlijn</option><option>Wouter en Rinske</option>
         </select>
       </div>
-      <div class="form-row">
-        <div class="form-lbl">Status</div>
+      <div class="form-row"><div class="form-lbl">Status</div>
         <select id="eStatus">
           <option value="">&#x2014; Geen status &#x2014;</option>
-          <option value="ZEKER">Zeker</option>
-          <option value="MISSCHIEN">Misschien</option>
-          <option value="GEEN GEBRUIK">Geen gebruik</option>
+          <option value="ZEKER">Zeker</option><option value="MISSCHIEN">Misschien</option><option value="GEEN GEBRUIK">Geen gebruik</option>
         </select>
       </div>
-      <div class="form-row">
-        <div class="form-lbl">Bijzonderheid</div>
-        <input type="text" id="eBijz" placeholder="bijv. kerstvakantie">
-      </div>
-      <div class="form-row">
-        <div class="form-lbl">Opmerking</div>
-        <textarea id="eOpmerking" placeholder="Optionele opmerking&#x2026;"></textarea>
-      </div>
+      <div class="form-row"><div class="form-lbl">Bijzonderheid</div><input type="text" id="eBijz" placeholder="bijv. kerstvakantie"></div>
+      <div class="form-row"><div class="form-lbl">Opmerking</div><textarea id="eOpmerking" placeholder="Optionele opmerking&#x2026;"></textarea></div>
     </div>
     <div class="modal-ftr">
-      <button class="btn-cancel" onclick="closeModal()">Annuleren</button>
-      <button class="btn-save" onclick="saveEdit()">Opslaan</button>
+      <button class="btn-cancel" onclick="closeModal('editModal')">Annuleren</button>
+      <button class="btn-save" id="saveBtn" onclick="saveEdit()">Opslaan</button>
     </div>
   </div>
 </div>
 
+<!-- HISTORY MODAL -->
+<div class="modal-overlay" id="histModal">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-hdr">
+      <h2>Geschiedenis</h2>
+      <button class="modal-x" onclick="closeModal('histModal')">&#x2715;</button>
+    </div>
+    <div class="hist-list" id="histList"></div>
+  </div>
+</div>
+
 <script>
-// ── PASSWORD ──────────────────────────────────────────────────────────────────
+const SUPA_URL = 'https://jnnbawgcztqafrwfvpsm.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpubmJhd2djenRxYWZyd2Z2cHNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0MTA5NjQsImV4cCI6MjA4ODk4Njk2NH0.9aJ7nYzKUxEaLUGdGoKMC-gRFFWa3AV7LcG8St5R64k';
+const db = supabase.createClient(SUPA_URL, SUPA_KEY);
+
 const PASSWORD = 'celles2026';
+var currentUser = '';
+var weekData = [];
+var curFilter = 'all';
+var editRef = null;
+var TODAY = new Date(); TODAY.setHours(0,0,0,0);
+
+var HOLIDAYS = {'2026-01-01':1,'2026-04-03':1,'2026-04-05':1,'2026-04-06':1,'2026-04-27':1,'2026-05-05':1,'2026-05-14':1,'2026-05-24':1,'2026-05-25':1,'2026-12-25':1,'2026-12-26':1};
+var MNL = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
+var MS  = ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
+
+function dstr(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function isToday(d){ var dd=new Date(d); dd.setHours(0,0,0,0); return dd.getTime()===TODAY.getTime(); }
 
 function unlock() {
-  const input = document.getElementById('lock-input');
-  const err   = document.getElementById('lock-error');
-  if (input.value === PASSWORD) {
-    const screen = document.getElementById('lock-screen');
-    screen.style.transition = 'opacity 0.35s ease';
-    screen.style.opacity = '0';
-    setTimeout(function() {
-      screen.style.display = 'none';
-      document.getElementById('app').style.display = 'block';
-      renderCalendar();
-    }, 350);
-  } else {
+  var name = document.getElementById('lock-name').value.trim();
+  var pw   = document.getElementById('lock-pw').value;
+  var err  = document.getElementById('lock-error');
+  if (!name) { document.getElementById('lock-name').classList.add('shake'); setTimeout(function(){ document.getElementById('lock-name').classList.remove('shake'); },400); return; }
+  if (pw !== PASSWORD) {
     err.classList.add('show');
-    input.classList.add('shake');
-    input.value = '';
-    setTimeout(function() { input.classList.remove('shake'); }, 400);
-    setTimeout(function() { input.focus(); }, 10);
+    var inp = document.getElementById('lock-pw');
+    inp.classList.add('shake'); inp.value='';
+    setTimeout(function(){ inp.classList.remove('shake'); },400);
+    return;
   }
+  currentUser = name;
+  document.getElementById('userBadge').textContent = name;
+  var s = document.getElementById('lock-screen');
+  s.style.transition='opacity 0.35s'; s.style.opacity='0';
+  setTimeout(function(){ s.style.display='none'; document.getElementById('app').style.display='block'; loadData(); },350);
 }
+document.getElementById('lock-pw').addEventListener('keydown', function(e){ if(e.key==='Enter') unlock(); });
+document.getElementById('lock-name').addEventListener('keydown', function(e){ if(e.key==='Enter') document.getElementById('lock-pw').focus(); });
+window.addEventListener('load', function(){ document.getElementById('lock-name').focus(); });
 
-function togglePw() {
-  var inp  = document.getElementById('lock-input');
-  var icon = document.getElementById('eye-icon');
-  if (inp.type === 'password') {
-    inp.type = 'text';
-    icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>';
-  } else {
-    inp.type = 'password';
-    icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+async function loadData() {
+  document.getElementById('loading').style.display='flex';
+  var start = (function(){ var j4=new Date(2026,0,4); var dow=(j4.getDay()+6)%7; var s=new Date(j4); s.setDate(j4.getDate()-dow); return s; })();
+  var weeks=[];
+  for(var w=1;w<=53;w++){
+    var mon=new Date(start); mon.setDate(start.getDate()+(w-1)*7);
+    if(mon.getFullYear()>2026&&w>52) break;
+    var days=[]; for(var i=0;i<7;i++){ var d=new Date(mon); d.setDate(mon.getDate()+i); days.push(d); }
+    weeks.push({week:w,days:days,wie:'',status:'',bijz:'',opmerking:'',hasHoliday:days.some(function(d){ return HOLIDAYS[dstr(d)]; })});
   }
+  var res = await db.from('planning').select('*').eq('jaar',2026).order('week');
+  if(res.data) res.data.forEach(function(row){ var idx=row.week-1; if(weeks[idx]){ weeks[idx].wie=row.wie||''; weeks[idx].status=row.status||''; weeks[idx].bijz=row.bijz||''; weeks[idx].opmerking=row.opmerking||''; } });
+  weekData=weeks;
+  document.getElementById('loading').style.display='none';
+  renderCalendar();
 }
 
-window.addEventListener('load', function() {
-  document.getElementById('lock-input').focus();
-});
+function showToast(msg){ var t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(function(){ t.classList.remove('show'); },2500); }
 
-// ── DATA ──────────────────────────────────────────────────────────────────────
-var RAW = {
-  1:  { wie:'Paul en Merlijn',   status:'',            bijz:'Kerstvakantie' },
-  2:  { wie:'Wouter en Rinske',  status:'ZEKER',       bijz:'' },
-  3:  { wie:'Fons en Simone',    status:'',            bijz:'' },
-  4:  { wie:'Paul en Merlijn',   status:'',            bijz:'' },
-  5:  { wie:'Wouter en Rinske',  status:'ZEKER',       bijz:'' },
-  6:  { wie:'Fons en Simone',    status:'',            bijz:'' },
-  7:  { wie:'Paul en Merlijn',   status:'',            bijz:'' },
-  8:  { wie:'Wouter en Rinske',  status:'ZEKER',       bijz:'Voorjaarsvakantie' },
-  9:  { wie:'Fons en Simone',    status:'',            bijz:'' },
-  10: { wie:'Wouter en Rinske',  status:'GEEN GEBRUIK',bijz:'' },
-  11: { wie:'Paul en Merlijn',   status:'',            bijz:'' },
-  12: { wie:'Fons en Simone',    status:'',            bijz:'' },
-  13: { wie:'Paul en Merlijn',   status:'',            bijz:'' },
-  14: { wie:'Wouter en Rinske',  status:'ZEKER',       bijz:'Pasen' },
-  15: { wie:'Fons en Simone',    status:'',            bijz:'' },
-  16: { wie:'Paul en Merlijn',   status:'',            bijz:'' },
-  17: { wie:'Wouter en Rinske',  status:'ZEKER',       bijz:'' },
-  18: { wie:'Fons en Simone',    status:'',            bijz:'Koningsdag' },
-  19: { wie:'Wouter en Rinske',  status:'',            bijz:'Meivakantie' },
-  20: { wie:'Fons en Simone',    status:'',            bijz:'Hemelvaartsdag' },
-  21: { wie:'Paul en Merlijn',   status:'',            bijz:'Pinksteren' },
-  22: { wie:'Paul en Merlijn',   status:'',            bijz:'' },
-  23: { wie:'Wouter en Rinske',  status:'',            bijz:'' },
-  24: { wie:'Fons en Simone',    status:'',            bijz:'' },
-  25: { wie:'Paul en Merlijn',   status:'',            bijz:'' },
-  26: { wie:'Wouter en Rinske',  status:'',            bijz:'' },
-  27: { wie:'Fons en Simone',    status:'',            bijz:'' },
-  28: { wie:'',                  status:'',            bijz:'' },
-  29: { wie:'Paul en Merlijn',   status:'',            bijz:'' },
-  30: { wie:'Paul en Merlijn',   status:'',            bijz:'' },
-  31: { wie:'Wouter en Rinske',  status:'',            bijz:'' },
-  32: { wie:'Wouter en Rinske',  status:'',            bijz:'' },
-  33: { wie:'Fons en Simone',    status:'',            bijz:'' },
-  34: { wie:'Fons en Simone',    status:'',            bijz:'' },
-  35: { wie:'Paul en Merlijn',   status:'',            bijz:'' },
-  36: { wie:'Wouter en Rinske',  status:'',            bijz:'' },
-  37: { wie:'Fons en Simone',    status:'',            bijz:'' },
-  38: { wie:'Paul en Merlijn',   status:'',            bijz:'' },
-  39: { wie:'Wouter en Rinske',  status:'',            bijz:'' },
-  40: { wie:'Fons en Simone',    status:'',            bijz:'' },
-  41: { wie:'Paul en Merlijn',   status:'',            bijz:'' },
-  42: { wie:'Fons en Simone',    status:'',            bijz:'' },
-  43: { wie:'Wouter en Rinske',  status:'',            bijz:'Herfstvakantie' },
-  44: { wie:'Paul en Merlijn',   status:'',            bijz:'' },
-  45: { wie:'Wouter en Rinske',  status:'',            bijz:'' },
-  46: { wie:'Fons en Simone',    status:'',            bijz:'' },
-  47: { wie:'Paul en Merlijn',   status:'',            bijz:'' },
-  48: { wie:'Wouter en Rinske',  status:'',            bijz:'' },
-  49: { wie:'Fons en Simone',    status:'',            bijz:'' },
-  50: { wie:'Paul en Merlijn',   status:'',            bijz:'' },
-  51: { wie:'Wouter en Rinske',  status:'',            bijz:'' },
-  52: { wie:'Fons en Simone',    status:'',            bijz:'Kerstvakantie' },
-  53: { wie:'Paul en Merlijn',   status:'',            bijz:'Kerstvakantie' }
-};
+function renderCalendar(){
+  var body=document.getElementById('calBody'); var frag=document.createDocumentFragment(); var lastM=-1;
+  weekData.forEach(function(w,i){
+    var mm=w.days[5].getMonth();
+    if(mm!==lastM){ lastM=mm; var div=document.createElement('div'); div.className='month-div'; div.innerHTML='<div></div><div class="month-div-name">'+MNL[mm].toUpperCase()+'</div>'; frag.appendChild(div); }
+    var row=document.createElement('div');
+    var isCur=w.days.some(isToday);
+    var rc=!w.wie?'':w.wie.indexOf('Fons')>=0?'row-fons':w.wie.indexOf('Paul')>=0?'row-paul':'row-wouter';
+    var cls='week-row '+rc+(isCur?' cur-wk':'')+(w.hasHoliday?' has-holiday':'')+(curFilter!=='all'&&w.wie!==curFilter?' hidden':'');
+    row.className=cls; row.dataset.idx=i; row.style.animationDelay=(i*4)+'ms';
+    row.onclick=function(e){ if(e.target.closest&&e.target.closest('button')) return; openEdit(parseInt(this.dataset.idx)); };
 
-var HOLIDAYS = {
-  '2026-01-01':1,'2026-04-03':1,'2026-04-05':1,'2026-04-06':1,
-  '2026-04-27':1,'2026-05-05':1,'2026-05-14':1,'2026-05-24':1,
-  '2026-05-25':1,'2026-12-25':1,'2026-12-26':1
-};
-
-var MONTHS_NL    = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
-var MONTHS_SHORT = ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
-
-function dstr(d) {
-  return d.getFullYear() + '-' +
-    String(d.getMonth()+1).padStart(2,'0') + '-' +
-    String(d.getDate()).padStart(2,'0');
-}
-
-function isoWeekStart(year) {
-  var j4 = new Date(year, 0, 4);
-  var dow = (j4.getDay() + 6) % 7;
-  var s = new Date(j4); s.setDate(j4.getDate() - dow);
-  return s;
-}
-
-function buildWeeks() {
-  var start = isoWeekStart(2026);
-  var weeks = [];
-  for (var w = 1; w <= 53; w++) {
-    var mon = new Date(start); mon.setDate(start.getDate() + (w-1)*7);
-    if (mon.getFullYear() > 2026 && w > 52) break;
-    var days = [];
-    for (var i = 0; i < 7; i++) {
-      var d = new Date(mon); d.setDate(mon.getDate() + i);
-      days.push(d);
-    }
-    var r = RAW[w] || {};
-    var hasHoliday = days.some(function(d){ return HOLIDAYS[dstr(d)]; });
-    weeks.push({
-      week: w, days: days,
-      wie: r.wie||'', status: r.status||'',
-      bijz: r.bijz||'', opmerking: r.opmerking||'',
-      hasHoliday: hasHoliday
-    });
-  }
-  return weeks;
-}
-
-var weekData  = buildWeeks();
-var curFilter = 'all';
-var editRef   = null;
-
-var TODAY = new Date(); TODAY.setHours(0,0,0,0);
-function isToday(d) { var dd = new Date(d); dd.setHours(0,0,0,0); return dd.getTime() === TODAY.getTime(); }
-function hasToday(days) { return days.some(isToday); }
-
-function wieClass(w) {
-  if (!w) return '';
-  if (w.indexOf('Fons')   >= 0) return 'wie-fons';
-  if (w.indexOf('Paul')   >= 0) return 'wie-paul';
-  return 'wie-wouter';
-}
-function rowClass(w) {
-  if (!w) return '';
-  if (w.indexOf('Fons')   >= 0) return 'row-fons';
-  if (w.indexOf('Paul')   >= 0) return 'row-paul';
-  return 'row-wouter';
-}
-
-function renderCalendar() {
-  var body     = document.getElementById('calBody');
-  var frag     = document.createDocumentFragment();
-  var lastMonth = -1;
-
-  weekData.forEach(function(w, i) {
-    var mainMonth = w.days[5].getMonth();
-    if (mainMonth !== lastMonth) {
-      lastMonth = mainMonth;
-      var div = document.createElement('div');
-      div.className = 'month-div';
-      div.innerHTML = '<div></div><div class="month-div-name">' + MONTHS_NL[mainMonth].toUpperCase() + '</div>';
-      frag.appendChild(div);
-    }
-
-    var row    = document.createElement('div');
-    var isCur  = hasToday(w.days);
-    var cls    = 'week-row ' + rowClass(w.wie);
-    if (isCur)          cls += ' cur-wk';
-    if (w.hasHoliday)   cls += ' has-holiday';
-    if (curFilter !== 'all' && w.wie !== curFilter) cls += ' hidden';
-    row.className    = cls;
-    row.dataset.idx  = i;
-    row.style.animationDelay = (i * 5) + 'ms';
-    row.onclick = function(e) {
-      if (e.target.closest && e.target.closest('button')) return;
-      openEdit(parseInt(this.dataset.idx));
-    };
-
-    var dayCells = '';
-    w.days.forEach(function(d, di) {
-      var itd      = isToday(d);
-      var isWknd   = di >= 5;
-      var isHol    = !!HOLIDAYS[dstr(d)];
-      var cellCls  = di === 5 ? 'cell-za' : (di === 6 ? 'cell-zo' : '');
-      var numCls   = isHol ? 'day-n holiday' : (isWknd ? 'day-n weekend' : 'day-n');
-
-      if (itd) {
-        dayCells += '<div class="cell day-cell ' + cellCls + '"><div class="today-ring"><div class="day-n" style="color:white">' + d.getDate() + '</div></div><div class="mon-l">' + MONTHS_SHORT[d.getMonth()] + '</div></div>';
-      } else {
-        dayCells += '<div class="cell day-cell ' + cellCls + '"><div class="' + numCls + '">' + d.getDate() + '</div><div class="mon-l">' + MONTHS_SHORT[d.getMonth()] + '</div></div>';
-      }
+    var dc=''; w.days.forEach(function(d,di){
+      var itd=isToday(d); var isW=di>=5; var isH=!!HOLIDAYS[dstr(d)];
+      var cc=di===5?'cell-za':di===6?'cell-zo':'';
+      var nc=isH?'day-n holiday':isW?'day-n weekend':'day-n';
+      if(itd) dc+='<div class="cell day-cell '+cc+'"><div class="today-ring"><div class="day-n" style="color:white">'+d.getDate()+'</div></div><div class="mon-l">'+MS[d.getMonth()]+'</div></div>';
+      else dc+='<div class="cell day-cell '+cc+'"><div class="'+nc+'">'+d.getDate()+'</div><div class="mon-l">'+MS[d.getMonth()]+'</div></div>';
     });
 
-    var wc       = wieClass(w.wie);
-    var wiePart  = w.wie
-      ? '<span class="wie-pill ' + wc + '"><span class="wie-dot-sm"></span>' + w.wie + '</span>'
-      : '<span class="wie-empty">Vrij</span>';
+    var wc=!w.wie?'':w.wie.indexOf('Fons')>=0?'wie-fons':w.wie.indexOf('Paul')>=0?'wie-paul':'wie-wouter';
+    var wp=w.wie?'<span class="wie-pill '+wc+'"><span class="wie-dot-sm"></span>'+w.wie+'</span>':'<span class="wie-empty">Vrij</span>';
+    var isVak=w.bijz&&w.bijz.toLowerCase().indexOf('vakantie')>=0;
+    var bh=w.bijz?'<div class="bijz-tag'+(isVak?' vakantie':'')+'">' +w.bijz+'</div>':'';
+    var mc=!w.wie?'#aeaeb2':w.wie.indexOf('Fons')>=0?'#ff6b35':w.wie.indexOf('Paul')>=0?'#007aff':'#30b050';
+    var mn=!w.wie?'Vrij':w.wie.split(' ')[0];
+    var msc=w.status==='ZEKER'?'#1d7a35':w.status==='MISSCHIEN'?'#b05000':w.status==='GEEN GEBRUIK'?'#aeaeb2':'transparent';
+    var mw='<div class="mob-wie"><div class="mob-dot" style="background:'+mc+'"></div><div class="mob-name" style="color:'+mc+'">'+mn+'</div>'+(w.status?'<div class="mob-sc" style="background:'+msc+'"></div>':'')+'</div>';
+    var sc2='',sl=w.status;
+    if(w.status==='ZEKER') sc2='s-zeker';
+    else if(w.status==='MISSCHIEN') sc2='s-misschien';
+    else if(w.status==='GEEN GEBRUIK'){sc2='s-geen';sl='Geen gebruik';}
+    var sp=w.status?'<span class="spill '+sc2+'"><span class="s-dot"></span>'+sl.charAt(0)+sl.slice(1).toLowerCase()+'</span>':'<span class="s-empty">&#x2014;</span>';
 
-    var isVak    = w.bijz && w.bijz.toLowerCase().indexOf('vakantie') >= 0;
-    var bijzHtml = w.bijz ? '<div class="bijz-tag' + (isVak ? ' vakantie' : '') + '">' + w.bijz + '</div>' : '';
-
-    // Mobile: color dot + short name in week col
-    var mobColor = !w.wie ? '#aeaeb2' : (w.wie.indexOf('Fons')>=0 ? '#ff6b35' : (w.wie.indexOf('Paul')>=0 ? '#007aff' : '#30b050'));
-    var mobName  = !w.wie ? 'Vrij' : w.wie.split(' ')[0];
-    var mobStatusColor = w.status==='ZEKER' ? '#1d7a35' : (w.status==='MISSCHIEN' ? '#b05000' : (w.status==='GEEN GEBRUIK' ? '#aeaeb2' : 'transparent'));
-    var mobWieHtml = '<div class="mob-wie"><div class="mob-wie-dot" style="background:' + mobColor + '"></div><div class="mob-wie-name" style="color:' + mobColor + '">' + mobName + '</div>' + (w.status ? '<div class="mob-status" style="background:' + mobStatusColor + '"></div>' : '') + '</div>';
-
-    var sc = '', sl = w.status;
-    if (w.status === 'ZEKER')        { sc = 's-zeker'; }
-    else if (w.status === 'MISSCHIEN') { sc = 's-misschien'; }
-    else if (w.status === 'GEEN GEBRUIK') { sc = 's-geen'; sl = 'Geen gebruik'; }
-    var statusPart = w.status
-      ? '<span class="spill ' + sc + '"><span class="s-dot"></span>' + sl.charAt(0) + sl.slice(1).toLowerCase() + '</span>'
-      : '<span class="s-empty">&#x2014;</span>';
-
-    row.innerHTML =
-      '<div class="cell wk-num-wrap"><div class="wk-num' + (isCur?' cur':'') + '">' + w.week + '</div>' + bijzHtml + mobWieHtml + '</div>' +
-      dayCells +
-      '<div class="cell wie-cell" onclick="openEdit(' + i + ')">' + wiePart + (w.opmerking ? '<div class="opmerking">' + w.opmerking + '</div>' : '') + '</div>' +
-      '<div class="cell status-cell">' + statusPart + '</div>' +
-      '<div class="cell actions-cell">' +
-        '<button class="icon-btn" title="Bewerken" onclick="openEdit(' + i + ')">' +
-          '<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M9.5 1.5l2 2-7 7-2.5.5.5-2.5 7-7z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
-        '</button>' +
-        '<button class="icon-btn del" title="Wissen" onclick="clearWeek(' + i + ')">' +
-          '<svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 1l9 9M10 1L1 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>' +
-        '</button>' +
-      '</div>';
-
-
-
+    row.innerHTML=
+      '<div class="cell wk-num-wrap"><div class="wk-num'+(isCur?' cur':'')+'">'+w.week+'</div>'+bh+mw+'</div>'+
+      dc+
+      '<div class="cell wie-cell">'+wp+(w.opmerking?'<div class="opmerking">'+w.opmerking+'</div>':'')+'</div>'+
+      '<div class="cell status-cell">'+sp+'</div>'+
+      '<div class="cell actions-cell"><button class="icon-btn" onclick="openEdit('+i+')"><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M9.5 1.5l2 2-7 7-2.5.5.5-2.5 7-7z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>';
     frag.appendChild(row);
   });
-
-  body.innerHTML = '';
-  body.appendChild(frag);
-  renderStats();
+  body.innerHTML=''; body.appendChild(frag); renderStats();
 }
 
-function renderStats() {
-  var zeker  = weekData.filter(function(w){ return w.status === 'ZEKER'; }).length;
-  var miss   = weekData.filter(function(w){ return w.status === 'MISSCHIEN'; }).length;
-  var vrij   = weekData.filter(function(w){ return !w.wie; }).length;
-  var fons   = weekData.filter(function(w){ return w.wie === 'Fons en Simone'  && w.status !== 'GEEN GEBRUIK'; }).length;
-  var paul   = weekData.filter(function(w){ return w.wie === 'Paul en Merlijn'  && w.status !== 'GEEN GEBRUIK'; }).length;
-  var wouter = weekData.filter(function(w){ return w.wie === 'Wouter en Rinske' && w.status !== 'GEEN GEBRUIK'; }).length;
-
-  document.getElementById('statsBar').innerHTML =
-    '<div class="stat-card"><div class="stat-val" style="color:var(--zeker-fg)">'    + zeker  + '</div><div class="stat-lbl">Weken zeker</div></div>' +
-    '<div class="stat-card"><div class="stat-val" style="color:var(--misschien-fg)">'+ miss   + '</div><div class="stat-lbl">Misschien</div></div>' +
-    '<div class="stat-card"><div class="stat-val" style="color:var(--ink-tertiary)">'+ vrij   + '</div><div class="stat-lbl">Vrij</div></div>' +
-    '<div class="stat-card"><div class="stat-val" style="color:var(--fons)">'        + fons   + '</div><div class="stat-lbl">Fons &amp; Simone</div></div>' +
-    '<div class="stat-card"><div class="stat-val" style="color:var(--paul)">'        + paul   + '</div><div class="stat-lbl">Paul &amp; Merlijn</div></div>' +
-    '<div class="stat-card"><div class="stat-val" style="color:var(--wouter)">'      + wouter + '</div><div class="stat-lbl">Wouter &amp; Rinske</div></div>';
+function renderStats(){
+  var z=weekData.filter(function(w){return w.status==='ZEKER';}).length;
+  var m=weekData.filter(function(w){return w.status==='MISSCHIEN';}).length;
+  var v=weekData.filter(function(w){return !w.wie;}).length;
+  var f=weekData.filter(function(w){return w.wie==='Fons en Simone'&&w.status!=='GEEN GEBRUIK';}).length;
+  var p=weekData.filter(function(w){return w.wie==='Paul en Merlijn'&&w.status!=='GEEN GEBRUIK';}).length;
+  var wo=weekData.filter(function(w){return w.wie==='Wouter en Rinske'&&w.status!=='GEEN GEBRUIK';}).length;
+  document.getElementById('statsBar').innerHTML=
+    '<div class="stat-card"><div class="stat-val" style="color:var(--zeker-fg)">'+z+'</div><div class="stat-lbl">Weken zeker</div></div>'+
+    '<div class="stat-card"><div class="stat-val" style="color:var(--misschien-fg)">'+m+'</div><div class="stat-lbl">Misschien</div></div>'+
+    '<div class="stat-card"><div class="stat-val" style="color:var(--ink-tertiary)">'+v+'</div><div class="stat-lbl">Vrij</div></div>'+
+    '<div class="stat-card"><div class="stat-val" style="color:var(--fons)">'+f+'</div><div class="stat-lbl">Fons &amp; Simone</div></div>'+
+    '<div class="stat-card"><div class="stat-val" style="color:var(--paul)">'+p+'</div><div class="stat-lbl">Paul &amp; Merlijn</div></div>'+
+    '<div class="stat-card"><div class="stat-val" style="color:var(--wouter)">'+wo+'</div><div class="stat-lbl">Wouter &amp; Rinske</div></div>';
 }
 
-function setFilter(f, btn) {
-  curFilter = f;
-  document.querySelectorAll('.chip').forEach(function(b){ b.classList.remove('active'); });
-  btn.classList.add('active');
-  renderCalendar();
+function setFilter(f,btn){ curFilter=f; document.querySelectorAll('.chip').forEach(function(b){b.classList.remove('active');}); btn.classList.add('active'); renderCalendar(); }
+
+function openEdit(idx){
+  var w=weekData[idx]; editRef=idx;
+  document.getElementById('modalTitle').textContent='Week '+w.week+' \u2014 2026';
+  document.getElementById('eWeek').value='Week '+w.week;
+  document.getElementById('eWie').value=w.wie||'';
+  document.getElementById('eStatus').value=w.status||'';
+  document.getElementById('eBijz').value=w.bijz||'';
+  document.getElementById('eOpmerking').value=w.opmerking||'';
+  document.getElementById('editModal').classList.add('open');
 }
 
-function openEdit(idx) {
-  var w = weekData[idx];
-  editRef = idx;
-  document.getElementById('modalTitle').textContent = 'Week ' + w.week + ' \u2014 2026';
-  document.getElementById('eWeek').value    = 'Week ' + w.week;
-  document.getElementById('eWie').value     = w.wie     || '';
-  document.getElementById('eStatus').value  = w.status  || '';
-  document.getElementById('eBijz').value    = w.bijz    || '';
-  document.getElementById('eOpmerking').value = w.opmerking || '';
-  document.getElementById('modalOverlay').classList.add('open');
+async function saveEdit(){
+  if(editRef===null) return;
+  var w=weekData[editRef];
+  var btn=document.getElementById('saveBtn');
+  btn.disabled=true; btn.textContent='Opslaan\u2026';
+  var nieuw={ wie:document.getElementById('eWie').value, status:document.getElementById('eStatus').value, bijz:document.getElementById('eBijz').value, opmerking:document.getElementById('eOpmerking').value };
+  await db.from('planning_historie').insert({ gewijzigd_door:currentUser, jaar:2026, week:w.week, wie_oud:w.wie, wie_nieuw:nieuw.wie, status_oud:w.status, status_nieuw:nieuw.status, bijz_oud:w.bijz, bijz_nieuw:nieuw.bijz, opmerking_oud:w.opmerking, opmerking_nieuw:nieuw.opmerking });
+  var res=await db.from('planning').upsert({ jaar:2026, week:w.week, wie:nieuw.wie, status:nieuw.status, bijz:nieuw.bijz, opmerking:nieuw.opmerking },{ onConflict:'jaar,week' });
+  btn.disabled=false; btn.textContent='Opslaan';
+  if(res.error){ showToast('Fout bij opslaan \u2014 probeer opnieuw'); return; }
+  w.wie=nieuw.wie; w.status=nieuw.status; w.bijz=nieuw.bijz; w.opmerking=nieuw.opmerking;
+  closeModal('editModal'); renderCalendar(); showToast('Week '+w.week+' opgeslagen \u2713');
 }
 
-function openAddModal() {
-  var fi = weekData.findIndex(function(w){ return !w.wie; });
-  openEdit(fi >= 0 ? fi : 0);
+async function openHistory(){
+  document.getElementById('histModal').classList.add('open');
+  document.getElementById('histList').innerHTML='<div class="hist-empty">Laden\u2026</div>';
+  var res=await db.from('planning_historie').select('*').order('gewijzigd_op',{ascending:false}).limit(50);
+  if(!res.data||res.data.length===0){ document.getElementById('histList').innerHTML='<div class="hist-empty">Nog geen wijzigingen opgeslagen.</div>'; return; }
+  var html='';
+  res.data.forEach(function(h){
+    var dt=new Date(h.gewijzigd_op);
+    var dtf=dt.toLocaleDateString('nl-NL',{day:'numeric',month:'short'})+' om '+dt.toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'});
+    var ch=[];
+    if(h.wie_oud!==h.wie_nieuw) ch.push('<b>Wie:</b> '+(h.wie_oud||'&#x2014;')+' <span class="hist-arrow">&#x2192;</span> '+(h.wie_nieuw||'&#x2014;'));
+    if(h.status_oud!==h.status_nieuw) ch.push('<b>Status:</b> '+(h.status_oud||'&#x2014;')+' <span class="hist-arrow">&#x2192;</span> '+(h.status_nieuw||'&#x2014;'));
+    if(h.bijz_oud!==h.bijz_nieuw) ch.push('<b>Bijz:</b> '+(h.bijz_oud||'&#x2014;')+' <span class="hist-arrow">&#x2192;</span> '+(h.bijz_nieuw||'&#x2014;'));
+    if(h.opmerking_oud!==h.opmerking_nieuw) ch.push('<b>Opmerking:</b> '+(h.opmerking_oud||'&#x2014;')+' <span class="hist-arrow">&#x2192;</span> '+(h.opmerking_nieuw||'&#x2014;'));
+    if(ch.length===0) return;
+    html+='<div class="hist-item"><div class="hist-meta"><strong>'+h.gewijzigd_door+'</strong> &middot; week '+h.week+' &middot; '+dtf+'</div><div class="hist-change">'+ch.join('<br>')+'</div></div>';
+  });
+  document.getElementById('histList').innerHTML=html||'<div class="hist-empty">Nog geen wijzigingen opgeslagen.</div>';
 }
 
-function closeModal() {
-  document.getElementById('modalOverlay').classList.remove('open');
-  editRef = null;
-}
-
-function saveEdit() {
-  if (editRef === null) return;
-  var w = weekData[editRef];
-  w.wie       = document.getElementById('eWie').value;
-  w.status    = document.getElementById('eStatus').value;
-  w.bijz      = document.getElementById('eBijz').value;
-  w.opmerking = document.getElementById('eOpmerking').value;
-  closeModal();
-  renderCalendar();
-}
-
-function clearWeek(idx) {
-  var w = weekData[idx];
-  w.wie = ''; w.status = ''; w.bijz = ''; w.opmerking = '';
-  renderCalendar();
-}
-
-document.getElementById('modalOverlay').addEventListener('click', function(e) {
-  if (e.target === document.getElementById('modalOverlay')) closeModal();
-});
+function closeModal(id){ document.getElementById(id).classList.remove('open'); if(id==='editModal') editRef=null; }
+document.querySelectorAll('.modal-overlay').forEach(function(el){ el.addEventListener('click',function(e){ if(e.target===el) closeModal(el.id); }); });
 </script>
 </body>
 </html>
