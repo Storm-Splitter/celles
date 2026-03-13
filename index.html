@@ -132,7 +132,7 @@
   .row-paul   .cell-wknd{background:var(--paul-wknd);}
   .row-wouter .cell-wknd{background:var(--wouter-wknd);}
 
-  .cell{padding:9px 6px;display:flex;flex-direction:column;justify-content:center;min-height:52px;}
+  .cell{padding:9px 6px;display:flex;flex-direction:column;justify-content:center;min-height:56px;}
   .wk-num-wrap{padding-left:14px;}
   .wk-num{font-size:12px;font-weight:600;color:var(--ink-3);}
   .wk-num.cur{color:var(--accent);font-weight:700;}
@@ -555,7 +555,9 @@ function renderCalendar(){
       var numCls=isH?'day-n holiday':isW?'day-n wknd':'day-n';
       var inner=itd
         ?'<div class="today-ring"><div class="day-n" style="color:white">'+d.getDate()+'</div></div>'
-        :'<div class="'+numCls+'" title="'+(isH?fNaam:'')+'">'+d.getDate()+'</div>';
+        :isH
+          ?'<div style="font-size:7.5px;font-weight:600;color:#8e44ad;letter-spacing:.01em;line-height:1.2;margin-bottom:2px;max-width:52px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+fNaam+'</div><div style="width:27px;height:27px;border-radius:50%;border:1.5px solid rgba(142,68,173,0.45);display:flex;align-items:center;justify-content:center;margin:0 auto;"><div class="'+numCls+'">'+d.getDate()+'</div></div>'
+          :'<div class="'+numCls+'">'+d.getDate()+'</div>';
       dc+='<div class="'+cc+'">'+inner+'<div class="mon-l">'+MS[d.getMonth()]+'</div></div>';
     });
 
