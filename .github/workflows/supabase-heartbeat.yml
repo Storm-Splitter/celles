@@ -1,0 +1,22 @@
+name: Supabase Heartbeat – Celles Planner
+ 
+on:
+  schedule:
+    - cron: '0 8 * * 1,4'   # Elke maandag en donderdag om 08:00 UTC
+  workflow_dispatch:          # Ook handmatig te starten via GitHub UI
+ 
+jobs:
+  heartbeat:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase
+        run: |
+          STATUS=$(curl --silent --output /dev/null --write-out "%{http_code}" \
+            "${{ secrets.SUPABASE_URL }}/rest/v1/?apikey=${{ secrets.SUPABASE_ANON_KEY }}")
+          echo "HTTP status: $STATUS"
+          if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 300 ]; then
+            echo "✅ Supabase Celles Planner is actief."
+          else
+            echo "❌ Onverwachte statuscode: $STATUS"
+            exit 1
+          fi
