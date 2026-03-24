@@ -1,14 +1,17 @@
-name: Supabase Heartbeat – Celles Planner
- 
+yamlname: Supabase Heartbeat – Celles Planner
+
 on:
   schedule:
-    - cron: '0 8 * * 1,4'   # Elke maandag en donderdag om 08:00 UTC
-  workflow_dispatch:          # Ook handmatig te starten via GitHub UI
- 
+    - cron: '0 8 * * 1,4'
+  workflow_dispatch:
+
 jobs:
   heartbeat:
     runs-on: ubuntu-latest
     steps:
+      - name: Debug
+        run: echo "URL=${{ secrets.SUPABASE_URL }}"
+
       - name: Ping Supabase
         run: |
           STATUS=$(curl --silent --output /dev/null --write-out "%{http_code}" \
