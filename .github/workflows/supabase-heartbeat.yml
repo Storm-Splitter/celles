@@ -1,4 +1,4 @@
-yamlname: Supabase Heartbeat – Celles Planner
+name: Supabase Heartbeat – Celles Planner
 
 on:
   schedule:
