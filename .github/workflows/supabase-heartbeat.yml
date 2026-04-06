@@ -9,16 +9,35 @@ jobs:
   heartbeat:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping Supabase
+      - name: Ping Supabase (INSERT)
         run: |
           STATUS=$(curl --silent --output /dev/null --write-out "%{http_code}" \
+            --request POST \
             --header "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
             --header "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
-            "${{ secrets.SUPABASE_URL }}/rest/v1/planning?limit=1")
-          echo "HTTP status: $STATUS"
+            --header "Content-Type: application/json" \
+            --header "Prefer: return=representation" \
+            --data '{"pinged_at": "now()"}' \
+            "${{ secrets.SUPABASE_URL }}/rest/v1/heartbeat")
+          echo "INSERT status: $STATUS"
           if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 300 ]; then
-            echo "✅ Supabase Celles Planner is actief."
+            echo "✅ INSERT geslaagd."
           else
-            echo "❌ Onverwachte statuscode: $STATUS"
+            echo "❌ INSERT mislukt: $STATUS"
+            exit 1
+          fi
+
+      - name: Ping Supabase (DELETE)
+        run: |
+          STATUS=$(curl --silent --output /dev/null --write-out "%{http_code}" \
+            --request DELETE \
+            --header "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+            --header "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
+            "${{ secrets.SUPABASE_URL }}/rest/v1/heartbeat?id=gte.1")
+          echo "DELETE status: $STATUS"
+          if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 300 ]; then
+            echo "✅ DELETE geslaagd."
+          else
+            echo "❌ DELETE mislukt: $STATUS"
             exit 1
           fi
