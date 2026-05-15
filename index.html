@@ -31,6 +31,7 @@
     --zeker-bg: rgba(52,199,89,0.12); --zeker-fg: #1d7a35;
     --misschien-bg: rgba(255,149,0,0.12); --misschien-fg: #a05000;
     --geen-bg: rgba(142,142,147,0.12); --geen-fg: #6e6e73;
+    --avail: #0d8a82; --avail-bg: rgba(20,184,166,0.14); --avail-row: rgba(20,184,166,0.06); --avail-wknd: rgba(20,184,166,0.18);
     --r: 14px; --rs: 9px;
     --blur: blur(20px) saturate(180%);
     --sh: 0 2px 16px rgba(0,0,0,0.07),0 1px 3px rgba(0,0,0,0.05);
@@ -84,8 +85,9 @@
 
   /* STATS */
   .stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:10px;margin-bottom:20px;}
-  .stat-card{background:var(--surface);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border:1px solid var(--border);border-radius:var(--r);padding:15px 17px;box-shadow:var(--sh);transition:transform .15s,box-shadow .15s;}
-  .stat-card:hover{transform:translateY(-1px);box-shadow:var(--sh-md);}
+  .stat-card{background:var(--surface);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border:1px solid var(--border);border-radius:var(--r);padding:15px 17px;box-shadow:var(--sh);transition:transform .15s,box-shadow .15s;font-family:inherit;color:inherit;text-align:left;cursor:pointer;outline:none;}
+  .stat-card:hover{transform:translateY(-1px);box-shadow:var(--sh-md);border-color:var(--border-strong);}
+  .stat-card.active{border-color:var(--ink);box-shadow:0 0 0 2px var(--ink),var(--sh-md);}
   .stat-val{font-size:28px;font-weight:700;letter-spacing:-.5px;line-height:1;margin-bottom:4px;}
   .stat-lbl{font-size:11px;color:var(--ink-2);font-weight:500;}
 
@@ -108,14 +110,23 @@
   .hist-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;background:white;color:var(--ink-2);border:1px solid var(--border);border-radius:20px;font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:all .14s;box-shadow:0 1px 3px rgba(0,0,0,.05);}
   .hist-btn:hover{border-color:var(--border-strong);color:var(--ink);}
 
+  /* AVAILABILITY BANNER */
+  .avail-banner{display:none;align-items:center;gap:14px;background:linear-gradient(120deg,rgba(20,184,166,0.13),rgba(13,138,130,0.07));border:1px solid rgba(20,184,166,0.32);border-radius:var(--r);padding:14px 18px;margin-bottom:14px;box-shadow:0 1px 6px rgba(13,138,130,0.08);}
+  .avail-icon{font-size:22px;line-height:1;}
+  .avail-txt{flex:1;font-size:13px;color:var(--ink-2);line-height:1.45;}
+  .avail-txt b{color:var(--avail);font-weight:700;}
+  .avail-wk{display:inline-block;background:var(--avail);color:white;padding:2px 9px;border-radius:6px;font-weight:700;font-size:12px;letter-spacing:.02em;margin:0 2px;}
+  .avail-jump{padding:7px 14px;border:1px solid var(--avail);background:white;color:var(--avail);border-radius:20px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .14s;white-space:nowrap;}
+  .avail-jump:hover{background:var(--avail);color:white;}
+
   /* TABLE */
   .tbl-wrap{background:var(--surface);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;}
-  .tbl-head{display:grid;grid-template-columns:48px 1fr 1fr 1fr 1fr 1fr 60px 60px 185px 110px 60px;background:rgba(0,0,0,.025);border-bottom:1px solid var(--border);}
+  .tbl-head{display:grid;grid-template-columns:48px 1fr 1fr 1fr 1fr 1fr 1fr 1fr 185px 110px 60px;background:rgba(0,0,0,.025);border-bottom:1px solid var(--border);}
   .th{padding:9px 6px;font-size:10.5px;font-weight:600;color:var(--ink-3);text-transform:uppercase;letter-spacing:.07em;text-align:center;}
   .th:first-child{text-align:left;padding-left:14px;}
   .th-wie{text-align:left;padding-left:12px;}
 
-  .week-row{display:grid;grid-template-columns:48px 1fr 1fr 1fr 1fr 1fr 60px 60px 185px 110px 60px;border-bottom:1px solid var(--border);transition:background .1s;animation:fadeUp .25s ease both;cursor:pointer;}
+  .week-row{display:grid;grid-template-columns:48px 1fr 1fr 1fr 1fr 1fr 1fr 1fr 185px 110px 60px;border-bottom:1px solid var(--border);transition:background .1s;animation:fadeUp .25s ease both;cursor:pointer;}
   @keyframes fadeUp{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
   .week-row:last-child{border-bottom:none;}
   .week-row.hidden{display:none;}
@@ -131,13 +142,19 @@
   .row-paul   .cell-wknd{background:var(--paul-wknd);}
   .row-wouter .cell-wknd{background:var(--wouter-wknd);}
 
+  /* Available weeks override family color — they are up-for-grabs */
+  .week-row.s-avail{background:var(--avail-row) !important;border-left:3px solid var(--avail);}
+  .week-row.s-avail .cell-wknd{background:var(--avail-wknd) !important;}
+  .week-row.s-avail .wie-pill{opacity:.55;text-decoration:line-through;}
+  .week-row.s-avail .wie-empty{color:var(--avail);font-weight:600;font-style:normal;}
+
   .cell{padding:9px 6px;display:flex;flex-direction:column;justify-content:center;min-height:56px;}
   .wk-num-wrap{padding-left:14px;}
   .wk-num{font-size:12px;font-weight:600;color:var(--ink-3);}
   .wk-num.cur{color:var(--accent);font-weight:700;}
-  .bijz-tag{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-2);margin-top:2px;line-height:1.2;}
-  .bijz-tag.school{color:#e07b00;}
-  .bijz-bar{display:none;}
+  .bijz-tag{display:none;}
+  .bijz-bar{grid-column:2 / 9;text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);padding:0 12px 7px;line-height:1.2;min-height:13px;}
+  .bijz-bar.school{color:#e07b00;}
 
   .day-cell{align-items:center;text-align:center;}
   .day-n{font-size:13px;font-weight:400;color:var(--ink);line-height:1;}
@@ -162,7 +179,7 @@
   .s-dot{width:5px;height:5px;border-radius:50%;background:currentColor;}
   .s-zeker{background:var(--zeker-bg);color:var(--zeker-fg);}
   .s-misschien{background:var(--misschien-bg);color:var(--misschien-fg);}
-  .s-geen{background:var(--geen-bg);color:var(--geen-fg);}
+  .s-geen{background:var(--avail-bg);color:var(--avail);font-weight:700;}
 
   .actions-cell{flex-direction:row;align-items:center;justify-content:flex-end;gap:3px;padding:7px 8px;}
   .icon-btn{width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;border-radius:6px;cursor:pointer;color:var(--ink-3);transition:all .12s;}
@@ -210,7 +227,7 @@
   /* MOBILE */
   .mob-wie{display:none;}
   @media(max-width:800px){
-    .tbl-head,.week-row{grid-template-columns:48px 1fr 1fr 1fr 1fr 1fr 52px 52px;}
+    .tbl-head,.week-row{grid-template-columns:48px 1fr 1fr 1fr 1fr 1fr 1fr 1fr;}
     .th-wie,.th-status,.th-act,.wie-cell,.status-cell,.actions-cell{display:none;}
     .mon-l{display:none;}
     header{padding:28px 0 18px;}
@@ -218,6 +235,7 @@
     .week-row.row-fons{border-left:3px solid var(--fons);}
     .week-row.row-paul{border-left:3px solid var(--paul);}
     .week-row.row-wouter{border-left:3px solid var(--wouter);}
+    .week-row.s-avail{border-left:3px solid var(--avail);}
     .modal-overlay{align-items:flex-end;padding:0;}
     .modal{max-width:100%;border-radius:20px 20px 0 0;transform:translateY(100%);transition:transform .28s cubic-bezier(.32,.72,0,1);}
     .modal-overlay.open .modal{transform:translateY(0);}
@@ -233,10 +251,8 @@
     .mob-status{display:inline-block;padding:1px 5px;border-radius:4px;font-size:9px;font-weight:800;line-height:1.35;letter-spacing:.02em;white-space:nowrap;}
     .mob-status.s-zeker{background:rgba(48,176,80,.18);color:#1d7a35;}
     .mob-status.s-misschien{background:rgba(255,149,0,.2);color:#a05000;}
-    .mob-status.s-geen{background:rgba(174,174,178,.28);color:#555;}
-    .wk-num-wrap .bijz-tag{display:none;}
-    .bijz-bar{display:block;grid-column:1 / -1;text-align:center;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-3);padding:3px 12px 6px;line-height:1.2;}
-    .bijz-bar.school{color:#e07b00;}
+    .mob-status.s-geen{background:var(--avail-bg);color:var(--avail);}
+    .bijz-bar{font-size:9.5px;padding:3px 12px 6px;}
   }
 </style>
 </head>
@@ -302,31 +318,39 @@
         <div class="legend-items">
           <span class="spill s-zeker"><span class="s-dot"></span>Zeker</span>
           <span class="spill s-misschien"><span class="s-dot"></span>Misschien</span>
-          <span class="spill s-geen"><span class="s-dot"></span>Geen gebruik</span>
+          <span class="spill s-geen"><span class="s-dot"></span>Beschikbaar</span>
         </div>
       </div>
       <div class="legend-grp">
-        <div class="legend-grp-lbl">Accentuering</div>
+        <div class="legend-grp-lbl">Per dag</div>
         <div class="legend-items">
-          <div class="legend-item"><div class="legend-swatch" style="background:rgba(0,0,0,.09)"></div>Weekend (vrij)</div>
-          <div class="legend-item"><div class="legend-swatch" style="background:rgba(255,107,53,.22)"></div>Weekend (bezet)</div>
-          <div class="legend-item"><div class="legend-swatch" style="background:transparent;border:1.5px solid #8e44ad;"></div><span style="color:#8e44ad;font-weight:600">Feestdag</span></div>
-          <div class="legend-item"><div class="legend-swatch" style="background:rgba(224,123,0,.25)"></div>Schoolvakantie</div>
+          <div class="legend-item"><div style="width:16px;height:16px;border-radius:50%;background:var(--accent);"></div>Vandaag</div>
+          <div class="legend-item"><div style="width:16px;height:16px;border-radius:50%;border:1.5px solid rgba(142,68,173,0.55);box-sizing:border-box;"></div><span style="color:#8e44ad;font-weight:600">Feestdag</span></div>
+          <div class="legend-item"><div class="legend-swatch" style="background:rgba(0,0,0,.055)"></div>Weekend (za/zo)</div>
+        </div>
+      </div>
+      <div class="legend-grp">
+        <div class="legend-grp-lbl">Per week</div>
+        <div class="legend-items">
+          <div class="legend-item"><span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#e07b00;">Schoolvakantie</span><span style="font-size:11px;color:var(--ink-3)">(regel onder de week)</span></div>
         </div>
       </div>
     </div>
 
     <div class="toolbar">
-      <button class="chip active" onclick="setFilter('all',this)">Alle weken</button>
-      <button class="chip" onclick="setFilter('Fons en Simone',this)"><span class="chip-dot" style="background:var(--fons)"></span>Fons &amp; Simone</button>
-      <button class="chip" onclick="setFilter('Paul en Merlijn',this)"><span class="chip-dot" style="background:var(--paul)"></span>Paul &amp; Merlijn</button>
-      <button class="chip" onclick="setFilter('Wouter en Rinske',this)"><span class="chip-dot" style="background:var(--wouter)"></span>Wouter &amp; Rinske</button>
+      <button class="chip active" data-filter="all" onclick="setFilter('all')">Alle weken</button>
+      <button class="chip" data-filter="beschikbaar" onclick="setFilter('beschikbaar')"><span class="chip-dot" style="background:var(--avail)"></span>Beschikbaar</button>
+      <button class="chip" data-filter="Fons en Simone" onclick="setFilter('Fons en Simone')"><span class="chip-dot" style="background:var(--fons)"></span>Fons &amp; Simone</button>
+      <button class="chip" data-filter="Paul en Merlijn" onclick="setFilter('Paul en Merlijn')"><span class="chip-dot" style="background:var(--paul)"></span>Paul &amp; Merlijn</button>
+      <button class="chip" data-filter="Wouter en Rinske" onclick="setFilter('Wouter en Rinske')"><span class="chip-dot" style="background:var(--wouter)"></span>Wouter &amp; Rinske</button>
       <div class="toolbar-spacer"></div>
       <button class="hist-btn" onclick="openHistory()">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         Geschiedenis
       </button>
     </div>
+
+    <div class="avail-banner" id="availBanner"></div>
 
     <div class="tbl-wrap">
       <div class="tbl-head">
@@ -351,7 +375,7 @@
       <div class="form-row"><div class="form-lbl">Wie</div>
         <select id="eWie"><option value="">— Niemand —</option><option>Fons en Simone</option><option>Paul en Merlijn</option><option>Wouter en Rinske</option></select></div>
       <div class="form-row"><div class="form-lbl">Status</div>
-        <select id="eStatus"><option value="">— Geen status —</option><option value="ZEKER">Zeker</option><option value="MISSCHIEN">Misschien</option><option value="GEEN GEBRUIK">Geen gebruik</option></select></div>
+        <select id="eStatus"><option value="">— Geen status —</option><option value="ZEKER">Zeker</option><option value="MISSCHIEN">Misschien</option><option value="GEEN GEBRUIK">Beschikbaar</option></select></div>
       <div class="form-row"><div class="form-lbl">Bijzonderheid</div><input type="text" id="eBijz" placeholder="bijv. kerstvakantie"></div>
       <div class="form-row"><div class="form-lbl">Opmerking</div><textarea id="eOpmerking" placeholder="Optionele opmerking…"></textarea></div>
     </div>
@@ -541,6 +565,30 @@ document.getElementById('lock-pw').addEventListener('keydown',function(e){if(e.k
   }
 })();
 
+// ── PREDICATES ────────────────────────────────────────────────────────────────
+function bijzIsFeestdag(w, year){
+  // Filter handmatige bijz die feitelijk al als feestdag-per-dag getoond wordt
+  if(!w.bijz) return false;
+  var feest = FEESTDAGEN[year] || {};
+  var b = w.bijz.toLowerCase().trim();
+  for(var di=0; di<7; di++){
+    var f = feest[dstr(w.days[di])];
+    if(!f) continue;
+    var fl = f.toLowerCase();
+    if(fl===b || fl.indexOf(b)>=0 || b.indexOf(fl)>=0) return true;
+  }
+  return false;
+}
+function isInPast(w){ return w.days[6] < TODAY; }
+function isPast(w){
+  if(YEAR < TODAY.getFullYear()) return false;  // historische jaren: alles tonen, niets verbergen
+  return isInPast(w);
+}
+function isAvail(w){
+  // beschikbaar = bookbaar in de toekomst zonder claim
+  return !isInPast(w) && (w.status==='GEEN GEBRUIK' || !w.wie);
+}
+
 // ── DATA ──────────────────────────────────────────────────────────────────────
 async function loadData(){
   document.getElementById('loading').style.display='flex';
@@ -577,7 +625,12 @@ function renderCalendar(){
   var feest=FEESTDAGEN[YEAR]||{};
 
   weekData.forEach(function(w,i){
-    // Month divider based on saturday
+    var pst=isPast(w);
+    var av=isAvail(w);
+    var passes=curFilter==='all'?true:curFilter==='beschikbaar'?av:w.wie===curFilter;
+    if(pst || !passes) return; // skip past + niet-matchende weken volledig
+
+    // Month divider based on saturday (alleen voor zichtbare maanden)
     var mm=w.days[5].getMonth();
     if(mm!==lastM){
       lastM=mm;
@@ -589,7 +642,7 @@ function renderCalendar(){
 
     var row=document.createElement('div');
     var isCur=w.days.some(isToday);
-    var cls='week-row '+wieRC(w.wie)+(isCur?' cur-wk':'')+(curFilter!=='all'&&w.wie!==curFilter?' hidden':'');
+    var cls='week-row '+wieRC(w.wie)+(av?' s-avail':'')+(isCur?' cur-wk':'');
     row.className=cls; row.dataset.idx=i; row.style.animationDelay=(i*3)+'ms';
     row.onclick=function(e){if(e.target.closest&&e.target.closest('button'))return;openEdit(parseInt(this.dataset.idx));};
 
@@ -615,16 +668,17 @@ function renderCalendar(){
     var opm=w.opmerking?'<div class="opm">'+w.opmerking+'</div>':'';
 
     // Bijzonderheid tag: handmatig veld of schoolvakantie (geen feestdagen)
-    var bijzLabel=w.bijz||w.schoolvak||'';
-    var isSchool=!w.bijz&&!!w.schoolvak;
+    var manualBijz=(w.bijz && !bijzIsFeestdag(w,YEAR)) ? w.bijz : '';
+    var bijzLabel=manualBijz||w.schoolvak||'';
+    var isSchool=!manualBijz&&!!w.schoolvak;
     var bh=bijzLabel?'<div class="bijz-tag'+(isSchool?' school':'')+'">'+bijzLabel+'</div>':'';
-    var bb=bijzLabel?'<div class="bijz-bar'+(isSchool?' school':'')+'">'+bijzLabel+'</div>':'';
+    var bb='<div class="bijz-bar'+(isSchool?' school':'')+'">'+(bijzLabel||' ')+'</div>';
 
     // Status
     var sc2='',sl=w.status;
     if(w.status==='ZEKER')sc2='s-zeker';
     else if(w.status==='MISSCHIEN')sc2='s-misschien';
-    else if(w.status==='GEEN GEBRUIK'){sc2='s-geen';sl='Geen gebruik';}
+    else if(w.status==='GEEN GEBRUIK'){sc2='s-geen';sl='Beschikbaar';}
     var sp=w.status?'<span class="spill '+sc2+'"><span class="s-dot"></span>'+sl.charAt(0)+sl.slice(1).toLowerCase()+'</span>':'<span class="s-empty">—</span>';
 
     // Mobile wie indicator
@@ -632,7 +686,7 @@ function renderCalendar(){
     var mn='Vrij';
     if(w.wie){var pp=w.wie.split(' en '); mn=pp.length===2?pp[0].charAt(0)+'&'+pp[1].charAt(0):w.wie;}
     var msCls=w.status==='ZEKER'?'s-zeker':w.status==='MISSCHIEN'?'s-misschien':w.status==='GEEN GEBRUIK'?'s-geen':'';
-    var msLbl=w.status==='ZEKER'?'Zeker':w.status==='MISSCHIEN'?'Misschien':w.status==='GEEN GEBRUIK'?'Geen':'';
+    var msLbl=w.status==='ZEKER'?'Zeker':w.status==='MISSCHIEN'?'Misschien':w.status==='GEEN GEBRUIK'?'Vrij':'';
     var mw='<div class="mob-wie"><div class="mob-name" style="color:'+mc+'">'+mn+'</div>'+(w.status?'<span class="mob-status '+msCls+'">'+msLbl+'</span>':'')+'</div>';
 
     row.innerHTML=
@@ -652,23 +706,55 @@ function renderCalendar(){
 function renderStats(){
   var z=weekData.filter(function(w){return w.status==='ZEKER';}).length;
   var m=weekData.filter(function(w){return w.status==='MISSCHIEN';}).length;
-  var v=weekData.filter(function(w){return !w.wie;}).length;
+  var v=weekData.filter(isAvail).length;
   var f=weekData.filter(function(w){return w.wie==='Fons en Simone'&&w.status!=='GEEN GEBRUIK';}).length;
   var p=weekData.filter(function(w){return w.wie==='Paul en Merlijn'&&w.status!=='GEEN GEBRUIK';}).length;
   var wo=weekData.filter(function(w){return w.wie==='Wouter en Rinske'&&w.status!=='GEEN GEBRUIK';}).length;
   document.getElementById('statsBar').innerHTML=
-    '<div class="stat-card"><div class="stat-val" style="color:var(--zeker-fg)">'+z+'</div><div class="stat-lbl">Weken zeker</div></div>'+
-    '<div class="stat-card"><div class="stat-val" style="color:var(--misschien-fg)">'+m+'</div><div class="stat-lbl">Misschien</div></div>'+
-    '<div class="stat-card"><div class="stat-val" style="color:var(--ink-3)">'+v+'</div><div class="stat-lbl">Vrij</div></div>'+
-    '<div class="stat-card"><div class="stat-val" style="color:var(--fons)">'+f+'</div><div class="stat-lbl">Fons &amp; Simone</div></div>'+
-    '<div class="stat-card"><div class="stat-val" style="color:var(--paul)">'+p+'</div><div class="stat-lbl">Paul &amp; Merlijn</div></div>'+
-    '<div class="stat-card"><div class="stat-val" style="color:var(--wouter)">'+wo+'</div><div class="stat-lbl">Wouter &amp; Rinske</div></div>';
+    '<button class="stat-card" data-filter="all"          onclick="setFilter(\'all\')"><div class="stat-val" style="color:var(--zeker-fg)">'+z+'</div><div class="stat-lbl">Weken zeker</div></button>'+
+    '<button class="stat-card" data-filter="all"          onclick="setFilter(\'all\')"><div class="stat-val" style="color:var(--misschien-fg)">'+m+'</div><div class="stat-lbl">Misschien</div></button>'+
+    '<button class="stat-card" data-filter="beschikbaar"  onclick="setFilter(\'beschikbaar\')"><div class="stat-val" style="color:var(--avail)">'+v+'</div><div class="stat-lbl">Beschikbaar</div></button>'+
+    '<button class="stat-card" data-filter="Fons en Simone"   onclick="setFilter(\'Fons en Simone\')"><div class="stat-val" style="color:var(--fons)">'+f+'</div><div class="stat-lbl">Fons &amp; Simone</div></button>'+
+    '<button class="stat-card" data-filter="Paul en Merlijn"  onclick="setFilter(\'Paul en Merlijn\')"><div class="stat-val" style="color:var(--paul)">'+p+'</div><div class="stat-lbl">Paul &amp; Merlijn</div></button>'+
+    '<button class="stat-card" data-filter="Wouter en Rinske" onclick="setFilter(\'Wouter en Rinske\')"><div class="stat-val" style="color:var(--wouter)">'+wo+'</div><div class="stat-lbl">Wouter &amp; Rinske</div></button>';
+  syncFilterActive();
+  renderAvailBanner();
 }
 
-function setFilter(f,btn){
+function renderAvailBanner(){
+  var el=document.getElementById('availBanner'); if(!el) return;
+  var next=null;
+  for(var i=0;i<weekData.length;i++){
+    var w=weekData[i];
+    if(!isAvail(w)) continue;
+    if(w.days[6]<TODAY) continue;  // ook in historische jaren: geen verleden in banner
+    next=w; break;
+  }
+  if(!next){el.style.display='none';el.innerHTML='';return;}
+  var fmt=function(d){return d.getDate()+' '+MS[d.getMonth()];};
+  var herkomst = next.status==='GEEN GEBRUIK' ? ' · vrijgegeven door '+next.wie
+               : !next.wie                     ? ' · nog niet toegewezen'
+               :                                 '';
+  el.style.display='flex';
+  el.innerHTML='<div class="avail-icon">🏡</div>'+
+    '<div class="avail-txt"><b>Eerstvolgende beschikbare week:</b> '+
+    '<span class="avail-wk">wk '+next.week+'</span> · '+
+    fmt(next.days[0])+' – '+fmt(next.days[6])+herkomst+'</div>'+
+    '<button class="avail-jump" onclick="setFilter(\'beschikbaar\')">Toon alle</button>';
+}
+
+function syncFilterActive(){
+  document.querySelectorAll('.chip').forEach(function(b){
+    b.classList.toggle('active', b.dataset.filter===curFilter);
+  });
+  document.querySelectorAll('.stat-card').forEach(function(b){
+    b.classList.toggle('active', b.dataset.filter===curFilter && curFilter!=='all');
+  });
+}
+
+function setFilter(f){
   curFilter=f;
-  document.querySelectorAll('.chip').forEach(function(b){b.classList.remove('active');});
-  btn.classList.add('active');
+  syncFilterActive();
   renderCalendar();
 }
 
