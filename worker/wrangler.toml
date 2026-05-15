@@ -1,0 +1,8 @@
+name = "celles-api"
+main = "src/index.js"
+compatibility_date = "2026-05-15"
+
+[vars]
+ALLOWED_ORIGINS = "https://www.celles.nl,https://celles.nl"
+SUPABASE_URL = "https://jnnbawgcztqafrwfvpsm.supabase.co"
+SESSION_TTL_DAYS = "30"
