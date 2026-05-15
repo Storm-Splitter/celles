@@ -624,7 +624,8 @@ function renderCalendar(){
 
     // Mobile wie indicator
     var mc=wieMC(w.wie);
-    var mn=!w.wie?'Vrij':w.wie.split(' ')[0];
+    var mn='Vrij';
+    if(w.wie){var pp=w.wie.split(' en '); mn=pp.length===2?pp[0].charAt(0)+'&'+pp[1].charAt(0):w.wie;}
     var msCls=w.status==='ZEKER'?'s-zeker':w.status==='MISSCHIEN'?'s-misschien':w.status==='GEEN GEBRUIK'?'s-geen':'';
     var msLbl=w.status==='ZEKER'?'Zeker':w.status==='MISSCHIEN'?'Misschien':w.status==='GEEN GEBRUIK'?'Geen':'';
     var mw='<div class="mob-wie"><div class="mob-name" style="color:'+mc+'">'+mn+'</div>'+(w.status?'<span class="mob-status '+msCls+'">'+msLbl+'</span>':'')+'</div>';
