@@ -156,13 +156,16 @@
   .bijz-bar{grid-column:2 / 9;text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);padding:0 12px 7px;line-height:1.2;min-height:13px;}
   .bijz-bar.school{color:#e07b00;}
 
-  .day-cell{align-items:center;text-align:center;}
+  .day-cell{align-items:center;text-align:center;position:relative;}
   .day-n{font-size:13px;font-weight:400;color:var(--ink);line-height:1;}
   .day-n.wknd{font-weight:500;}
   .day-n.holiday{color:#8e44ad;font-weight:700;}
   .mon-l{font-size:9px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.04em;margin-top:2px;}
-  .today-ring{width:27px;height:27px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto;}
+  .day-mark{width:27px;height:27px;display:flex;align-items:center;justify-content:center;margin:0 auto;border-radius:50%;}
+  .today-ring{background:var(--accent);}
   .today-ring .day-n{color:white;font-weight:600;font-size:12px;}
+  .holiday-ring{border:1.5px solid rgba(142,68,173,0.45);}
+  .day-label{position:absolute;top:2px;left:3px;right:3px;font-size:7.5px;font-weight:600;color:#8e44ad;letter-spacing:.01em;line-height:1.2;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;}
 
   .wie-cell{padding:7px 12px;}
   .wie-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;white-space:nowrap;}
@@ -302,8 +305,6 @@
       </div>
     </header>
 
-    <div class="stats" id="statsBar"></div>
-
     <div class="legend-bar">
       <div class="legend-grp">
         <div class="legend-grp-lbl">Families</div>
@@ -363,6 +364,8 @@
       </div>
       <div id="calBody"></div>
     </div>
+
+    <div class="stats" id="statsBar" style="margin-top:20px;margin-bottom:0;"></div>
   </div>
 </div>
 
@@ -654,12 +657,11 @@ function renderCalendar(){
       var isH=!!fNaam;
       var cc=isW?'cell cell-wknd day-cell':'cell day-cell';
       var numCls=isH?'day-n holiday':isW?'day-n wknd':'day-n';
-      var inner=itd
-        ?'<div class="today-ring"><div class="day-n" style="color:white">'+d.getDate()+'</div></div>'
-        :isH
-          ?'<div style="font-size:7.5px;font-weight:600;color:#8e44ad;letter-spacing:.01em;line-height:1.2;margin-bottom:2px;max-width:52px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+fNaam+'</div><div style="width:27px;height:27px;border-radius:50%;border:1.5px solid rgba(142,68,173,0.45);display:flex;align-items:center;justify-content:center;margin:0 auto;"><div class="'+numCls+'">'+d.getDate()+'</div></div>'
-          :'<div class="'+numCls+'">'+d.getDate()+'</div>';
-      dc+='<div class="'+cc+'">'+inner+'<div class="mon-l">'+MS[d.getMonth()]+'</div></div>';
+      var label=isH?'<div class="day-label">'+fNaam+'</div>':'';
+      var ring=itd?'<div class="day-mark today-ring"><div class="day-n" style="color:white">'+d.getDate()+'</div></div>'
+              :isH?'<div class="day-mark holiday-ring"><div class="'+numCls+'">'+d.getDate()+'</div></div>'
+                  :'<div class="day-mark"><div class="'+numCls+'">'+d.getDate()+'</div></div>';
+      dc+='<div class="'+cc+'">'+label+ring+'<div class="mon-l">'+MS[d.getMonth()]+'</div></div>';
     });
 
     // Wie pill
