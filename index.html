@@ -227,10 +227,12 @@
     .toolbar-spacer{display:none;}
     .stats{grid-template-columns:repeat(3,1fr);}
     .stat-val{font-size:22px;}
-    .mob-wie{display:flex;align-items:center;gap:4px;margin-top:3px;}
-    .mob-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
-    .mob-name{font-size:9px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:38px;}
-    .mob-sc{display:inline-block;width:6px;height:6px;border-radius:50%;margin-left:2px;flex-shrink:0;}
+    .mob-wie{display:flex;align-items:center;gap:5px;margin-top:3px;flex-wrap:wrap;}
+    .mob-name{font-size:10px;font-weight:700;white-space:nowrap;}
+    .mob-status{display:inline-block;padding:1px 5px;border-radius:4px;font-size:9px;font-weight:800;line-height:1.35;letter-spacing:.02em;white-space:nowrap;}
+    .mob-status.s-zeker{background:rgba(48,176,80,.18);color:#1d7a35;}
+    .mob-status.s-misschien{background:rgba(255,149,0,.2);color:#a05000;}
+    .mob-status.s-geen{background:rgba(174,174,178,.28);color:#555;}
   }
 </style>
 </head>
@@ -623,8 +625,9 @@ function renderCalendar(){
     // Mobile wie indicator
     var mc=wieMC(w.wie);
     var mn=!w.wie?'Vrij':w.wie.split(' ')[0];
-    var msc=w.status==='ZEKER'?'#1d7a35':w.status==='MISSCHIEN'?'#a05000':w.status==='GEEN GEBRUIK'?'#aeaeb2':'transparent';
-    var mw='<div class="mob-wie"><div class="mob-dot" style="background:'+mc+'"></div><div class="mob-name" style="color:'+mc+'">'+mn+'</div>'+(w.status?'<div class="mob-sc" style="background:'+msc+'"></div>':'')+'</div>';
+    var msCls=w.status==='ZEKER'?'s-zeker':w.status==='MISSCHIEN'?'s-misschien':w.status==='GEEN GEBRUIK'?'s-geen':'';
+    var msLbl=w.status==='ZEKER'?'Zeker':w.status==='MISSCHIEN'?'Misschien':w.status==='GEEN GEBRUIK'?'Geen':'';
+    var mw='<div class="mob-wie"><div class="mob-name" style="color:'+mc+'">'+mn+'</div>'+(w.status?'<span class="mob-status '+msCls+'">'+msLbl+'</span>':'')+'</div>';
 
     row.innerHTML=
       '<div class="cell wk-num-wrap"><div class="wk-num'+(isCur?' cur':'')+'">'+w.week+'</div>'+bh+mw+'</div>'+
