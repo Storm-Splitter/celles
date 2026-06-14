@@ -45,7 +45,9 @@ A week is **Beschikbaar** iff: not in the past AND (`status === 'GEEN GEBRUIK'` 
 
 - **Frontend**: GitHub repo `Storm-Splitter/celles`, GitHub Pages with CNAME `www.celles.nl`. Single-file `index.html`.
 - **API**: Cloudflare Worker `celles-api` at `https://celles-api.vandenacker.workers.dev`. Source in `worker/`. Workers.dev subdomain: `vandenacker`.
-- **Database**: Supabase project `jnnbawgcztqafrwfvpsm` ("Storm-Splitter's Org"). Tables `planning`, `planning_historie`. RLS on, no anon policies — service-role only.
+- **Database**: Supabase project `jnnbawgcztqafrwfvpsm` ("Storm-Splitter's Org").
+  - Real-data tables `planning`, `planning_historie`: RLS on, **no** anon policies — service-role only (worker bypasses RLS).
+  - `heartbeat`: throwaway ping table (`id` + `pinged_at`), tapped 2×/week by the `supabase-heartbeat.yml` GitHub Action **with the anon key** to keep the free-tier project from auto-pausing. RLS on, with permissive anon insert/select/delete policies so the Action keeps working. Deliberately **not** switched to the service-role key — don't spread that key into GitHub for a throwaway table. `/api/health` does NOT touch the DB, so it can't replace the heartbeat.
 
 ### Worker secrets (Wrangler)
 - `APP_PASSWORD_HASH` — PBKDF2-100k. **Workers cap iterations at 100k; do NOT raise.** Format `iter:saltB64:hashB64`.
